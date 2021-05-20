@@ -12,9 +12,23 @@ type ReuseIdAction = {
   token: string
 }
 
-const actionTypes = ['getId', 'reuseId']
+type SubscribeAction = {
+  type: 'subscribe'
+  key: string
+}
 
-export type ReceiveAction = GetIdAction | ReuseIdAction
+type UnsubscribeAction = {
+  type: 'unsubscribe'
+  key: string
+}
+
+const actionTypes = ['getId', 'reuseId', 'subscribe', 'unsubscribe']
+
+export type ReceiveAction =
+  | GetIdAction
+  | ReuseIdAction
+  | SubscribeAction
+  | UnsubscribeAction
 
 export function isReceiveAction(object: any): object is ReceiveAction {
   if (!object?.type) return false

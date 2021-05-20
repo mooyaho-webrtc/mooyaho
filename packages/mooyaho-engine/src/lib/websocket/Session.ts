@@ -9,6 +9,7 @@ const { SESSION_SECRET_KEY } = process.env
 if (!SESSION_SECRET_KEY) {
   console.warn('SESSION_SECRET_KEY is not defined')
 }
+
 class Session {
   id: string
   private token: string
@@ -38,6 +39,12 @@ class Session {
         break
       }
       case 'reuseId': {
+        break
+      }
+      case 'subscribe': {
+        break
+      }
+      case 'unsubscribe': {
         break
       }
     }
