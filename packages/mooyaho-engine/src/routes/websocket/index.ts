@@ -11,8 +11,10 @@ const websocket: FastifyPluginAsync = async fastify => {
       try {
         const data = JSON.parse(message.toString())
         if (!isReceiveAction(data)) return
-        // logic
-      } catch (e) {}
+        session.handle(data)
+      } catch (e) {
+        console.error(e)
+      }
     })
   })
 }
