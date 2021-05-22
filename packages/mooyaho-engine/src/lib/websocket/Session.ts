@@ -3,6 +3,7 @@ import WebSocket = require('ws')
 import { ReceiveAction } from './actions/receive'
 import actionCreators from './actions/send'
 import { createHmac } from 'crypto'
+import { globalSubscriber } from './redis/createRedisClient'
 
 const { SESSION_SECRET_KEY } = process.env
 
@@ -42,6 +43,7 @@ class Session {
         break
       }
       case 'subscribe': {
+        globalSubscriber.subscribe(action.key)
         break
       }
       case 'unsubscribe': {
@@ -52,6 +54,11 @@ class Session {
 
   private handleGetId() {
     const action = actionCreators.getIdSuccess(this.id)
+    this.sendJSON(action)
+  }
+
+  public sendSubscriptionMessage(key: string, message: any) {
+    const action = actionCreators.subscriptionMessage(key, message)
     this.sendJSON(action)
   }
 }

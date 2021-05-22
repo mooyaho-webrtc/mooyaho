@@ -1,5 +1,6 @@
 import { FastifyPluginAsync } from 'fastify'
 import { isReceiveAction } from '../../lib/websocket/actions/receive'
+
 import Session from '../../lib/websocket/Session'
 
 const websocket: FastifyPluginAsync = async fastify => {

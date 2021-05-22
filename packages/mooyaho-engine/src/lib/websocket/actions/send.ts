@@ -19,6 +19,7 @@ type ReuseIdSuccessAction = {
 
 type SubscriptionMessageAction = {
   type: 'subscriptionMessage'
+  key: string
   message: any
 }
 
@@ -38,8 +39,12 @@ const actionCreators = {
     id: id,
   }),
   reuseIdSuccess: (): ReuseIdSuccessAction => ({ type: 'reuseIdSuccess' }),
-  subscriptionMessage: (message: any): SubscriptionMessageAction => ({
+  subscriptionMessage: (
+    key: string,
+    message: any
+  ): SubscriptionMessageAction => ({
     type: 'subscriptionMessage',
+    key,
     message,
   }),
 }

@@ -4,4 +4,5 @@ const createRedisClient = () => {
   return redis.createClient()
 }
 
-const coreRedisClient = createRedisClient()
+export const coreRedisClient = createRedisClient()
+export const globalSubscriber = createRedisClient()
