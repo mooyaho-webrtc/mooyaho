@@ -62,7 +62,6 @@ class Session {
         break
       }
       case 'message': {
-        console.log('what?')
         this.handleMessage(action.message)
         break
       }
@@ -98,7 +97,6 @@ class Session {
   }
 
   private handleMessage(message: Message) {
-    console.log(message, this.currentChannel)
     if (!this.currentChannel) return
     channelHelper.message(this.currentChannel, this.id, message)
   }

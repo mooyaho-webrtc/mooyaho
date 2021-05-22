@@ -23,7 +23,6 @@ const channelHelper = {
     )
   },
   message(channel: string, sessionId: string, message: Message) {
-    console.log(channel, sessionId, message)
     coreRedisClient.publish(
       withPrefix(channel),
       JSON.stringify({

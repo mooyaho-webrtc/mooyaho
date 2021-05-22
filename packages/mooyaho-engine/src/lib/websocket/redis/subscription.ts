@@ -12,7 +12,6 @@ class Subscription {
     }
     const sessionSet = this.subscriptionMap.get(key)! // guaranteed to be valid
     sessionSet.add(session)
-    console.log(`${session.id} has subscribed to channel ${key}`)
   }
 
   unsubscribe(key: string, session: Session) {
