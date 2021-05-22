@@ -4,6 +4,7 @@ import { ReceiveAction } from './actions/receive'
 import actionCreators from './actions/send'
 import { createHmac } from 'crypto'
 import { globalSubscriber } from './redis/createRedisClient'
+import subscription from './redis/subscription'
 
 const { SESSION_SECRET_KEY } = process.env
 
@@ -43,7 +44,7 @@ class Session {
         break
       }
       case 'subscribe': {
-        globalSubscriber.subscribe(action.key)
+        subscription.subscribe(action.key, this)
         break
       }
       case 'unsubscribe': {
