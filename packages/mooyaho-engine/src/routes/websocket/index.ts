@@ -17,6 +17,10 @@ const websocket: FastifyPluginAsync = async fastify => {
         console.error(e)
       }
     })
+
+    connection.socket.on('close', (code, reason) => {
+      session.dispose()
+    })
   })
 }
 

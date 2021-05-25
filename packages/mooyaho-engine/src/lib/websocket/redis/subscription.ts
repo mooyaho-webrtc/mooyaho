@@ -12,12 +12,20 @@ class Subscription {
     }
     const sessionSet = this.subscriptionMap.get(key)! // guaranteed to be valid
     sessionSet.add(session)
+
+    return () => {
+      this.unsubscribe(key, session)
+    }
   }
 
   unsubscribe(key: string, session: Session) {
     const sessionSet = this.subscriptionMap.get(key)
     if (!sessionSet) return
     sessionSet.delete(session)
+
+    if (sessionSet.size === 0) {
+      this.subscriptionMap.delete(key)
+    }
   }
 
   dispatch(key: string, message: any) {
