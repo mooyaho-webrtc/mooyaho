@@ -2,6 +2,8 @@
  * actions that server receives
  */
 
+import { Description } from './common'
+
 type GetIdAction = {
   type: 'getId'
 }
@@ -38,20 +40,19 @@ type ListSessionsAction = {
 type CallAction = {
   type: 'call'
   to: string
-  // description: {
-  //   sdp: string
-  //   type: 'offer' | 'answer'
-  // }
+  description: Description
 }
 
 type AnswerAction = {
   type: 'answer'
   to: string
+  description: Description
 }
 
 type CandidateAction = {
   type: 'candidate'
   to: string
+  candidate: any
 }
 
 export type Message =

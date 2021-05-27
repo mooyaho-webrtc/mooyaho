@@ -1,0 +1,13 @@
+body {
+  box-sizing: border-box;
+}
+
+* {
+  box-sizing: inherit;
+}
+
+#myVideo {
+  width: 720px;
+  height: 360px;
+  border: 1px solid black;
+}

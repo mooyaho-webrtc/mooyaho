@@ -2,6 +2,7 @@
  * actions that server sends
  */
 
+import { Description } from './common'
 import { Message } from './receive'
 
 type ConnectedAction = {
@@ -54,16 +55,19 @@ type MessagedAction = {
 type CalledAction = {
   type: 'called'
   from: string
+  description: Description
 }
 
 type AnsweredAction = {
   type: 'answered'
   from: string
+  description: Description
 }
 
 type CandidatedAction = {
   type: 'candidated'
   from: string
+  candidate: any
 }
 
 export type SendAction =
@@ -119,17 +123,20 @@ const actionCreators = {
     message,
     sessionId,
   }),
-  called: (from: string): CalledAction => ({
+  called: (from: string, description: Description): CalledAction => ({
     type: 'called',
     from,
+    description,
   }),
-  answered: (from: string): AnsweredAction => ({
+  answered: (from: string, description: Description): AnsweredAction => ({
     type: 'answered',
     from,
+    description,
   }),
-  candidated: (from: string): CandidatedAction => ({
+  candidated: (from: string, candidate: any): CandidatedAction => ({
     type: 'candidated',
     from,
+    candidate,
   }),
 }
 
