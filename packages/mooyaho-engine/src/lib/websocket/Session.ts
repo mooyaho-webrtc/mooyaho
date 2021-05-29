@@ -29,6 +29,7 @@ class Session {
       .digest('hex')
 
     this.informConnected()
+    this.subscribe(prefixer.direct(this.id))
   }
 
   sendJSON(data: any) {
@@ -117,7 +118,6 @@ class Session {
 
   private handleEnter(channel: string) {
     this.subscribe(prefixer.channel(channel))
-    this.subscribe(prefixer.direct(this.id))
 
     channelHelper.enter(channel, this.id)
     this.currentChannel = channel
@@ -126,7 +126,6 @@ class Session {
   private handleLeave() {
     if (!this.currentChannel) return
     this.unsubscribe(prefixer.channel(this.currentChannel))
-    this.unsubscribe(prefixer.direct(this.id))
 
     channelHelper.leave(this.currentChannel, this.id)
     this.currentChannel = null

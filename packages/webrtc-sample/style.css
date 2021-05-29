@@ -6,8 +6,8 @@ body {
   box-sizing: inherit;
 }
 
-#myVideo {
-  width: 720px;
-  height: 360px;
+video {
+  width: 360px;
+  height: 240px;
   border: 1px solid black;
 }
