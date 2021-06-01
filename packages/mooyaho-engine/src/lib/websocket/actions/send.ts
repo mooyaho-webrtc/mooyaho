@@ -2,6 +2,7 @@
  * actions that server sends
  */
 
+import { SessionUser } from '../../../services/sessionService'
 import { Description } from './common'
 import { Message } from './receive'
 
@@ -39,6 +40,7 @@ type ListSessionsSuccess = {
 type EnteredAction = {
   type: 'entered'
   sessionId: string
+  user: SessionUser
 }
 
 type LeftAction = {
@@ -110,9 +112,10 @@ const actionCreators = {
     type: 'listSessionsSuccess',
     sessions,
   }),
-  entered: (sessionId: string): EnteredAction => ({
+  entered: (sessionId: string, user: SessionUser): EnteredAction => ({
     type: 'entered',
     sessionId,
+    user,
   }),
   left: (sessionId: string): LeftAction => ({
     type: 'left',

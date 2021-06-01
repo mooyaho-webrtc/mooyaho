@@ -44,6 +44,21 @@ const sessionService = {
 
     return { session, user: parsed }
   },
+  async getUserBySessionId(sessionId: string) {
+    const session = await prisma.session.findUnique({
+      where: { id: sessionId },
+      include: {
+        user: true,
+      },
+    })
+    if (!session) {
+      return null
+    }
+    const parsed: SessionUser = JSON.parse(session.user.json)
+    return parsed
+  },
 }
+
+export type SessionUser = { id: string; [key: string]: any }
 
 export default sessionService

@@ -3,10 +3,14 @@ import { coreRedisClient, publishJSON } from './redis/createRedisClient'
 import { promisify } from 'util'
 import prefixer from './redis/prefixer'
 import actionCreators from './actions/send'
+import { SessionUser } from '../../services/sessionService'
 
 const channelHelper = {
-  enter(channel: string, sessionId: string) {
-    publishJSON(prefixer.channel(channel), actionCreators.entered(sessionId))
+  enter(channel: string, sessionId: string, user: SessionUser) {
+    publishJSON(
+      prefixer.channel(channel),
+      actionCreators.entered(sessionId, user)
+    )
     coreRedisClient.lpush(prefixer.sessions(channel), sessionId)
   },
   leave(channel: string, sessionId: string) {
