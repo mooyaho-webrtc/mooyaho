@@ -1,4 +1,4 @@
-import prisma from '../lib/websocket/prisma'
+import prisma from '../lib/prisma'
 
 const sessionService = {
   async integrate(sessionId: string, userJSONString: any) {

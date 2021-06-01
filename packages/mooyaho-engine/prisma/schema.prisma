@@ -11,8 +11,7 @@ generator client {
 }
 
 model Channel {
-  id   Int    @id @default(autoincrement())
-  name String
+  id String @id
 
   ChannelSessions ChannelSessions[]
 }
@@ -28,7 +27,7 @@ model Session {
 
 model ChannelSessions {
   id        Int    @id @default(autoincrement())
-  channelId Int
+  channelId String
   sessionId String
 
 

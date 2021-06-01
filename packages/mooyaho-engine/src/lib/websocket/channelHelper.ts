@@ -11,10 +11,12 @@ const channelHelper = {
       prefixer.channel(channel),
       actionCreators.entered(sessionId, user)
     )
+    // TODO: use channel service
     coreRedisClient.lpush(prefixer.sessions(channel), sessionId)
   },
   leave(channel: string, sessionId: string) {
     publishJSON(prefixer.channel(channel), actionCreators.left(sessionId))
+    // TODO: use channel service
     coreRedisClient.lrem(prefixer.sessions(channel), 1, sessionId)
   },
   message(channel: string, sessionId: string, message: Message) {
@@ -24,6 +26,7 @@ const channelHelper = {
     )
   },
   async listSessions(channel: string) {
+    // TODO: use channel service
     const key = prefixer.sessions(channel)
     const lrangeAsync = promisify(coreRedisClient.lrange).bind(coreRedisClient)
 
