@@ -1,0 +1,11 @@
+{
+  "title": "Integrate Session Params",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Session ID"
+    }
+  },
+  "required": ["id"]
+}

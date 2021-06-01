@@ -2,6 +2,26 @@ import 'dotenv/config'
 import { join } from 'path'
 import AutoLoad, { AutoloadPluginOptions } from 'fastify-autoload'
 import { FastifyPluginAsync } from 'fastify'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+
+async function run() {
+  // try {
+  //   await prisma.channel.create({
+  //     data: {
+  //       name: 'test',
+  //     },
+  //   })
+  //   const channels = await prisma.channel.findMany()
+  //   console.log(channels)
+  //   console.log('created a channel')
+  // } catch (e) {
+  //   console.log(e)
+  // }
+}
+
+run()
 
 export type AppOptions = {
   // Place your custom options for app below here.

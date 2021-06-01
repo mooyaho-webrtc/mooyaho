@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Channel {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  ChannelSessions ChannelSessions[]
+}
+
+model Session {
+  id     String @id
+  userId String
+
+
+  user            User              @relation(fields: [userId], references: [id])
+  ChannelSessions ChannelSessions[]
+}
+
+model ChannelSessions {
+  id        Int    @id @default(autoincrement())
+  channelId Int
+  sessionId String
+
+
+  channel Channel @relation(fields: [channelId], references: [id])
+  session Session @relation(fields: [sessionId], references: [id])
+}
+
+model User {
+  id   String @id
+  json String
+
+  Session Session[]
+}

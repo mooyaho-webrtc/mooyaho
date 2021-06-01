@@ -1,6 +1,6 @@
 import './style.css'
 
-const ws = new WebSocket('ws://172.30.1.2:8080/websocket')
+const ws = new WebSocket('ws://localhost:8081/websocket')
 
 const rtcConfiguration = {}
 

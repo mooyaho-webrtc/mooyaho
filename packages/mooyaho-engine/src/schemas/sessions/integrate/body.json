@@ -1,0 +1,12 @@
+{
+  "title": "Integrate Session Body",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique id of user"
+    }
+  },
+  "description": "You can put any extra fields of user data in body",
+  "required": ["id"]
+}

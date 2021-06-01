@@ -66,3 +66,5 @@ dist
 
 
 .env
+**/migrations
+dev.db
