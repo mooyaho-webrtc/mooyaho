@@ -32,6 +32,7 @@ function handleMessage(message) {
         break;
       case 'entered': 
         if (action.sessionId === sessionId) {
+          listSessions()
           break;
         }
         call(action.sessionId)
@@ -69,6 +70,12 @@ function enterChannel(channelName) {
   sendJSON({
     type: 'enter',
     channel: channelName
+  })
+}
+
+function listSessions() {
+  sendJSON({
+    type: 'listSessions'
   })
 }
 

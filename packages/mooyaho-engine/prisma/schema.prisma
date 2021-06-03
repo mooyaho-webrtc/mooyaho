@@ -13,7 +13,7 @@ generator client {
 model Channel {
   id String @id
 
-  ChannelSessions ChannelSessions[]
+  ChannelSessions ChannelSession[]
 }
 
 model Session {
@@ -21,11 +21,11 @@ model Session {
   userId String
 
 
-  user            User              @relation(fields: [userId], references: [id])
-  ChannelSessions ChannelSessions[]
+  user            User             @relation(fields: [userId], references: [id])
+  ChannelSessions ChannelSession[]
 }
 
-model ChannelSessions {
+model ChannelSession {
   id        Int    @id @default(autoincrement())
   channelId String
   sessionId String

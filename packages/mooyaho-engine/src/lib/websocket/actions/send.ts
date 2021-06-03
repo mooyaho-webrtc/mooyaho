@@ -34,7 +34,7 @@ type SubscriptionSuccess = {
 
 type ListSessionsSuccess = {
   type: 'listSessionsSuccess'
-  sessions: string[]
+  sessions: { id: string; user: any }[]
 }
 
 type EnteredAction = {
@@ -108,7 +108,9 @@ const actionCreators = {
     type: 'subscriptionSuccess',
     key,
   }),
-  listSessionsSuccess: (sessions: string[]): ListSessionsSuccess => ({
+  listSessionsSuccess: (
+    sessions: { id: string; user: any }[]
+  ): ListSessionsSuccess => ({
     type: 'listSessionsSuccess',
     sessions,
   }),

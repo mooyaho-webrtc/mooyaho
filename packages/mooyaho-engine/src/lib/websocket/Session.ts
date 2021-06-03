@@ -152,7 +152,7 @@ class Session {
   async handleListSessions() {
     if (!this.currentChannel) return
     try {
-      const sessions = await channelHelper.listSessions(this.currentChannel)
+      const sessions = await channelService.listUsers(this.currentChannel)
       this.sendJSON(actionCreators.listSessionsSuccess(sessions))
     } catch (e) {
       console.error(e)
