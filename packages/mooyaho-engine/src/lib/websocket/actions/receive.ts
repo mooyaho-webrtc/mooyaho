@@ -74,6 +74,13 @@ type MessageAction = {
   message: Message
 }
 
+type IntegrateUserAction = {
+  type: 'integrateUser'
+  user: {
+    [key: string]: any
+  }
+}
+
 const actionTypes = [
   'getId',
   'reuseId',
@@ -86,6 +93,7 @@ const actionTypes = [
   'call',
   'answer',
   'candidate',
+  'integrateUser',
 ]
 
 export type ReceiveAction =
@@ -100,6 +108,7 @@ export type ReceiveAction =
   | CallAction
   | AnswerAction
   | CandidateAction
+  | IntegrateUserAction
 
 export function isReceiveAction(object: any): object is ReceiveAction {
   if (!object?.type) return false

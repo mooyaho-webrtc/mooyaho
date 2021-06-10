@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package mooyaho;
+
+service Mooyaho {
+  rpc Call(Signal) returns (Signal) {}
+}
+
+message Signal {
+  string type = 1;
+  string sessionId = 2;
+}

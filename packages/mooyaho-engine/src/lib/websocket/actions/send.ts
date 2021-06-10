@@ -72,6 +72,14 @@ type CandidatedAction = {
   candidate: any
 }
 
+type IntegratedUserAction = {
+  type: 'integrated'
+  user: {
+    id: string
+    [key: string]: any
+  }
+}
+
 export type SendAction =
   | ConnectedAction
   | ReuseIdSuccessAction
@@ -84,6 +92,7 @@ export type SendAction =
   | CalledAction
   | AnsweredAction
   | CandidatedAction
+  | IntegratedUserAction
 
 const actionCreators = {
   connected: (id: string, token: string): ConnectedAction => ({
@@ -142,6 +151,13 @@ const actionCreators = {
     type: 'candidated',
     from,
     candidate,
+  }),
+  integrated: (user: {
+    id: string
+    [key: string]: any
+  }): IntegratedUserAction => ({
+    type: 'integrated',
+    user,
   }),
 }
 

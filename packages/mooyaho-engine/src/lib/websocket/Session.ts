@@ -11,6 +11,7 @@ import rtcHelper from './rtcHelper'
 import { Description } from './actions/common'
 import sessionService from '../../services/sessionService'
 import channelService from '../../services/channelService'
+import config from '../../configLoader'
 
 const { SESSION_SECRET_KEY } = process.env
 
@@ -87,6 +88,10 @@ class Session {
       }
       case 'candidate': {
         this.handleCandidate(action.to, action.candidate)
+        break
+      }
+      case 'integrateUser': {
+        this.handleIntegrateUser(action.user)
         break
       }
     }
@@ -181,6 +186,17 @@ class Session {
       to,
       candidate,
     })
+  }
+
+  async handleIntegrateUser(user: Record<string, any>) {
+    if (!config.allowAnonymous) return
+    const userWithSessionId = {
+      ...user,
+      id: this.id,
+    }
+    await sessionService.integrate(this.id, JSON.stringify(userWithSessionId))
+    this.sendJSON(actionCreators.integrated(userWithSessionId))
+    console.log(actionCreators.integrated(userWithSessionId))
   }
 
   public sendSubscriptionMessage(key: string, message: any) {

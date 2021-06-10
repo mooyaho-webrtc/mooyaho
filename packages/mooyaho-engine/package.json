@@ -28,6 +28,7 @@
     "fastify-sensible": "^3.1.0",
     "fastify-swagger": "^4.7.0",
     "fastify-websocket": "^3.2.0",
+    "grpc": "^1.24.10",
     "prisma": "2.23.0",
     "redis": "^3.1.2",
     "typeorm": "^0.2.32",

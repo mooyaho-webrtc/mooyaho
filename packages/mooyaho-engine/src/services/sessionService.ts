@@ -1,7 +1,7 @@
 import prisma from '../lib/prisma'
 
 const sessionService = {
-  async integrate(sessionId: string, userJSONString: any) {
+  async integrate(sessionId: string, userJSONString: string) {
     const parsed = JSON.parse(userJSONString)
     if (parsed.id === undefined) {
       const e = new Error('There is no id field in user json')

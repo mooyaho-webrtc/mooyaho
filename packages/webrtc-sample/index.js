@@ -206,6 +206,16 @@ createMediaStream().then((stream) => {
   myVideo.volume = 0 
 })
 
+function integrateUser(displayName) {
+  sendJSON({
+    type: 'integrateUser',
+    user: {
+      displayName
+    }
+  })
+}
+
+window.integrateUser = integrateUser
 
 // const button = document.body.querySelector('#btnLoadCam');
 

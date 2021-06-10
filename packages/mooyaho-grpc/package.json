@@ -1,0 +1,13 @@
+{
+  "name": "mooyaho-grpc",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@types/google-protobuf": "^3.15.2",
+    "google-protobuf": "^3.17.3",
+    "grpc": "^1.24.10",
+    "grpc-tools": "^1.11.1",
+    "grpc_tools_node_protoc_ts": "^5.3.0"
+  }
+}

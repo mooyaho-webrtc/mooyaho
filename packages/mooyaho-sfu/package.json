@@ -1,0 +1,19 @@
+{
+  "name": "mooyaho-sfu",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": null,
+  "dependencies": {
+    "grpc": "^1.24.10",
+    "ts-node": "^10.0.0",
+    "ts-node-dev": "^1.1.6",
+    "typescript": "^4.3.2"
+  },
+  "scripts": {
+    "start": "ts-node -T ./src/main.ts",
+    "start:client": "ts-node -T ./src/client.ts",
+    "clean:protos": "rm -rf ./src/protos",
+    "build:protos": "./scripts/build.protos"
+  }
+}
