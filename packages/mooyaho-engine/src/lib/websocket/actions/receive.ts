@@ -81,6 +81,11 @@ type IntegrateUserAction = {
   }
 }
 
+type SFUCallAction = {
+  type: 'SFUCall'
+  sdp: string
+}
+
 const actionTypes = [
   'getId',
   'reuseId',
@@ -94,6 +99,7 @@ const actionTypes = [
   'answer',
   'candidate',
   'integrateUser',
+  'SFUCall',
 ]
 
 export type ReceiveAction =
@@ -109,6 +115,7 @@ export type ReceiveAction =
   | AnswerAction
   | CandidateAction
   | IntegrateUserAction
+  | SFUCallAction
 
 export function isReceiveAction(object: any): object is ReceiveAction {
   if (!object?.type) return false

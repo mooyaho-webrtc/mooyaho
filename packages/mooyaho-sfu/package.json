@@ -12,6 +12,7 @@
   },
   "scripts": {
     "start": "ts-node -T ./src/main.ts",
+    "dev": "ts-node-dev -T ./src/main.ts",
     "start:client": "ts-node -T ./src/client.ts",
     "clean:protos": "rm -rf ./src/protos",
     "build:protos": "./scripts/build.protos"

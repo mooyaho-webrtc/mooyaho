@@ -80,6 +80,11 @@ type IntegratedUserAction = {
   }
 }
 
+type SFUAnswerAction = {
+  type: 'SFUAnswer'
+  sdp: string
+}
+
 export type SendAction =
   | ConnectedAction
   | ReuseIdSuccessAction
@@ -93,6 +98,7 @@ export type SendAction =
   | AnsweredAction
   | CandidatedAction
   | IntegratedUserAction
+  | SFUAnswerAction
 
 const actionCreators = {
   connected: (id: string, token: string): ConnectedAction => ({
@@ -158,6 +164,10 @@ const actionCreators = {
   }): IntegratedUserAction => ({
     type: 'integrated',
     user,
+  }),
+  SFUAnswer: (sdp: string): SFUAnswerAction => ({
+    type: 'SFUAnswer',
+    sdp,
   }),
 }
 

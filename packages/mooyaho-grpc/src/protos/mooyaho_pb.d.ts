@@ -6,42 +6,48 @@
 
 import * as jspb from "google-protobuf";
 
-export class CallRequest extends jspb.Message { 
-    getValue(): string;
-    setValue(value: string): CallRequest;
+export class Signal extends jspb.Message { 
+    getType(): string;
+    setType(value: string): Signal;
+    getSessionid(): string;
+    setSessionid(value: string): Signal;
+    getSdp(): string;
+    setSdp(value: string): Signal;
+    getCandidate(): string;
+    setCandidate(value: string): Signal;
 
     serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): CallRequest.AsObject;
-    static toObject(includeInstance: boolean, msg: CallRequest): CallRequest.AsObject;
+    toObject(includeInstance?: boolean): Signal.AsObject;
+    static toObject(includeInstance: boolean, msg: Signal): Signal.AsObject;
     static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
     static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: CallRequest, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): CallRequest;
-    static deserializeBinaryFromReader(message: CallRequest, reader: jspb.BinaryReader): CallRequest;
+    static serializeBinaryToWriter(message: Signal, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Signal;
+    static deserializeBinaryFromReader(message: Signal, reader: jspb.BinaryReader): Signal;
 }
 
-export namespace CallRequest {
+export namespace Signal {
     export type AsObject = {
-        value: string,
+        type: string,
+        sessionid: string,
+        sdp: string,
+        candidate: string,
     }
 }
 
-export class CallReply extends jspb.Message { 
-    getValue(): string;
-    setValue(value: string): CallReply;
+export class Empty extends jspb.Message { 
 
     serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): CallReply.AsObject;
-    static toObject(includeInstance: boolean, msg: CallReply): CallReply.AsObject;
+    toObject(includeInstance?: boolean): Empty.AsObject;
+    static toObject(includeInstance: boolean, msg: Empty): Empty.AsObject;
     static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
     static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: CallReply, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): CallReply;
-    static deserializeBinaryFromReader(message: CallReply, reader: jspb.BinaryReader): CallReply;
+    static serializeBinaryToWriter(message: Empty, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Empty;
+    static deserializeBinaryFromReader(message: Empty, reader: jspb.BinaryReader): Empty;
 }
 
-export namespace CallReply {
+export namespace Empty {
     export type AsObject = {
-        value: string,
     }
 }

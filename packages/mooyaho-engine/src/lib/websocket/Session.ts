@@ -1,5 +1,5 @@
 import { v4 } from 'uuid'
-import WebSocket = require('ws')
+import WebSocket from 'ws'
 import { Message, ReceiveAction } from './actions/receive'
 import actionCreators from './actions/send'
 import { createHmac } from 'crypto'
@@ -12,6 +12,7 @@ import { Description } from './actions/common'
 import sessionService from '../../services/sessionService'
 import channelService from '../../services/channelService'
 import config from '../../configLoader'
+import { Client } from 'mooyaho-grpc'
 
 const { SESSION_SECRET_KEY } = process.env
 
@@ -45,7 +46,6 @@ class Session {
   }
 
   handle(action: ReceiveAction) {
-    console.log(action)
     switch (action.type) {
       case 'getId': {
         this.handleGetId()
@@ -92,6 +92,10 @@ class Session {
       }
       case 'integrateUser': {
         this.handleIntegrateUser(action.user)
+        break
+      }
+      case 'SFUCall': {
+        this.handleSFUCall(action.sdp)
         break
       }
     }
@@ -196,7 +200,19 @@ class Session {
     }
     await sessionService.integrate(this.id, JSON.stringify(userWithSessionId))
     this.sendJSON(actionCreators.integrated(userWithSessionId))
-    console.log(actionCreators.integrated(userWithSessionId))
+  }
+
+  async handleSFUCall(sdp: string) {
+    const client = new Client('localhost:50000')
+    try {
+      const result = await client.call({
+        sessionId: this.id,
+        sdp,
+      })
+      this.sendJSON(actionCreators.SFUAnswer(result))
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   public sendSubscriptionMessage(key: string, message: any) {

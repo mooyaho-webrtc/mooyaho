@@ -1,13 +1,19 @@
 {
   "name": "mooyaho-grpc",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
   "license": "MIT",
   "dependencies": {
+    "@grpc/proto-loader": "^0.6.2",
     "@types/google-protobuf": "^3.15.2",
     "google-protobuf": "^3.17.3",
     "grpc": "^1.24.10",
     "grpc-tools": "^1.11.1",
     "grpc_tools_node_protoc_ts": "^5.3.0"
+  },
+  "scripts": {
+    "build:protos": "./scripts/build.protos",
+    "build": "tsc"
   }
 }

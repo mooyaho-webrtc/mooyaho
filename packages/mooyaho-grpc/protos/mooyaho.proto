@@ -4,9 +4,14 @@ package mooyaho;
 
 service Mooyaho {
   rpc Call(Signal) returns (Signal) {}
+  rpc Icecandidate(Signal) returns (Empty) {}
 }
 
 message Signal {
-  string type = 1;
+  string type = 1; // offer, answer
   string sessionId = 2;
+  string sdp = 3; // for offer / answer
+  string candidate = 4; // for icecandidate
 }
+
+message Empty {}
