@@ -1,8 +1,8 @@
 {
   "name": "mooyaho-grpc",
   "version": "1.0.0",
-  "main": "build/index.js",
-  "types": "build/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "license": "MIT",
   "dependencies": {
     "@grpc/grpc-js": "^1.3.2",

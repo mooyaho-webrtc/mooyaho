@@ -9,6 +9,5 @@ const packageDef = protoLoader.loadSync(
 const proto: ProtoGrpcType = grpc.loadPackageDefinition(packageDef) as any
 
 export * from './protos/mooyaho/Mooyaho'
-export * from './protos/mooyaho/Signal'
 export * from './Client'
 export default proto
