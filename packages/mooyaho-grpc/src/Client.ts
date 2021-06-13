@@ -1,33 +1,28 @@
-import grpc from "grpc";
-import { MooyahoClient } from "mooyaho-grpc/src/protos/mooyaho_grpc_pb";
-import { Signal } from "mooyaho-grpc/src/protos/mooyaho_pb";
+import * as grpc from '@grpc/grpc-js'
+import proto from '.'
+import { MooyahoClient } from './protos/mooyaho/Mooyaho'
+import { promisify } from 'util'
 
 export class Client {
-  client: MooyahoClient;
+  client: MooyahoClient
   constructor(address: string) {
-    this.client = new MooyahoClient(address, grpc.credentials.createInsecure());
+    this.client = new proto.mooyaho.Mooyaho(
+      address,
+      grpc.credentials.createInsecure()
+    )
   }
 
-  call({ sessionId, sdp }: CallParams) {
-    const signal = new Signal();
-    signal.setSessionid(sessionId);
-    signal.setSdp(sdp);
-    signal.setType("offer");
-
-    return new Promise<string>((resolve, reject) => {
-      this.client.call(signal, (error, response) => {
-        if (error) {
-          return reject(error);
-        }
-        resolve(response.getSdp());
-      });
-    });
+  async call({ sessionId, sdp }: CallParams) {
+    const callAsync = promisify(this.client.call).bind(this.client)
+    const res = await callAsync({
+      sessionId,
+      sdp,
+    })
+    return res!.sdp
   }
 }
 
 type CallParams = {
-  sessionId: string;
-  sdp: string;
-};
-
-type Answer = {};
+  sessionId: string
+  sdp: string
+}

@@ -10,8 +10,6 @@ mkdir -p ${PROTO_DEST}
 # JavaScript code generation
 yarn run grpc_tools_node_protoc \
     --js_out=import_style=commonjs,binary:${PROTO_DEST} \
-    --grpc_out=${PROTO_DEST} \
-    --ts_out=${PROTO_DEST} \
+    --grpc_out=grpc_js:${PROTO_DEST} \
     -I ./protos \
     protos/*.proto
-
