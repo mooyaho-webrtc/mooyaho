@@ -6,10 +6,12 @@
   "license": "MIT",
   "dependencies": {
     "@grpc/grpc-js": "^1.3.2",
-    "@grpc/proto-loader": "^0.6.2"
+    "@grpc/proto-loader": "^0.6.2",
+    "grpc-tools": "^1.11.1"
   },
   "scripts": {
-    "build:protos": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --grpcLib=@grpc/grpc-js --outDir=src/protos/ protos/*.proto",
+    "build:protos": "./scripts/build.protos",
+    "build:protos:types": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --grpcLib=@grpc/grpc-js --outDir=src/protos/ protos/*.proto",
     "build": "tsc"
   }
 }

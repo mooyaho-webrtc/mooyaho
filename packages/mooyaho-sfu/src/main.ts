@@ -1,6 +1,28 @@
-import grpc from '@grpc/grpc-js'
+import { ServerCredentials, Server } from '@grpc/grpc-js'
+import proto, { MooyahoHandlers } from 'mooyaho-grpc'
 
-import { ProtoGrpcType } from 'mooyaho-grpc'
+const server = new Server()
+
+const mooyahoServer: MooyahoHandlers = {
+  Call(call, callback) {
+    callback(null, {
+      sdp: '1234',
+    })
+  },
+  Icecandidate(call, callback) {
+    callback(null, null)
+  },
+}
+
+server.addService(proto.mooyaho.Mooyaho.service, mooyahoServer)
+server.bindAsync(
+  'localhost:50000',
+  ServerCredentials.createInsecure(),
+  (err, port) => {
+    server.start()
+    console.log('Running server...')
+  }
+)
 
 // import { Server, ServerCredentials } from 'grpc'
 // import {

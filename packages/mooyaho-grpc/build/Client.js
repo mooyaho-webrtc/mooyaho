@@ -18,20 +18,26 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !exports.hasOwnProperty(p)) __createBinding(exports, m, p);
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const path_1 = __importDefault(require("path"));
-const protoLoader = __importStar(require("@grpc/proto-loader"));
+exports.Client = void 0;
 const grpc = __importStar(require("@grpc/grpc-js"));
-const packageDef = protoLoader.loadSync(path_1.default.join(__dirname, '../protos/mooyaho.proto'));
-const proto = grpc.loadPackageDefinition(packageDef);
-__exportStar(require("./protos/mooyaho/Mooyaho"), exports);
-__exportStar(require("./protos/mooyaho/Signal"), exports);
-__exportStar(require("./Client"), exports);
-exports.default = proto;
-//# sourceMappingURL=index.js.map
+const _1 = __importDefault(require("."));
+const util_1 = require("util");
+class Client {
+    constructor(address) {
+        this.client = new _1.default.mooyaho.Mooyaho(address, grpc.credentials.createInsecure());
+    }
+    async call({ sessionId, sdp }) {
+        const callAsync = util_1.promisify(this.client.call).bind(this.client);
+        const res = await callAsync({
+            sessionId,
+            sdp,
+        });
+        return res.sdp;
+    }
+}
+exports.Client = Client;
+//# sourceMappingURL=Client.js.map
