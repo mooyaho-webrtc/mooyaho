@@ -13,7 +13,6 @@
     "grpc-tools": "^1.11.1"
   },
   "scripts": {
-    "build:protos": "./scripts/build.protos",
     "build:protos:types": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --grpcLib=@grpc/grpc-js --outDir=src/protos/ protos/*.proto",
     "build": "tsc"
   }
