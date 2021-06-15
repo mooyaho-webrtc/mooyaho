@@ -4,7 +4,8 @@ package mooyaho;
 
 service Mooyaho {
   rpc Call(Signal) returns (Signal) {}
-  rpc Icecandidate(Signal) returns (Empty) {}
+  rpc ClientIcecandidate(Signal) returns (Empty) {}
+  rpc ListenSignal(ListenSignalRequest) returns (stream Signal) {}
 }
 
 message Signal {
@@ -12,6 +13,10 @@ message Signal {
   string sessionId = 2;
   string sdp = 3; // for offer / answer
   string candidate = 4; // for icecandidate
+}
+
+message ListenSignalRequest {
+  string sessionId = 1;
 }
 
 message Empty {}

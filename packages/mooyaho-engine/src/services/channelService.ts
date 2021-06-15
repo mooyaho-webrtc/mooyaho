@@ -2,11 +2,12 @@ import { v4 } from 'uuid'
 import prisma from '../lib/prisma'
 
 const channelService = {
-  async create() {
+  async create(sfuEnabled: boolean) {
     const id = v4()
     const channel = await prisma.channel.create({
       data: {
         id,
+        sfuServerId: sfuEnabled ? 1 : undefined,
       },
     })
 

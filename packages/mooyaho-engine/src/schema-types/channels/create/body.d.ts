@@ -5,13 +5,10 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-/**
- * You can put any extra fields of user data in body
- */
-export interface IntegrateSessionBody {
+export interface CreateChannelBody {
   /**
-   * Unique id of user
+   * true or omit this value
    */
-  id: string;
+  sfuEnabled?: boolean;
   [k: string]: unknown;
 }

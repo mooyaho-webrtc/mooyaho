@@ -11,9 +11,11 @@ generator client {
 }
 
 model Channel {
-  id String @id
+  id          String @id
+  sfuServerId Int?
 
   ChannelSessions ChannelSession[]
+  sfuServer       SFUServer?       @relation(fields: [sfuServerId], references: [id])
 }
 
 model Session {
@@ -40,4 +42,11 @@ model User {
   json String
 
   Session Session[]
+}
+
+model SFUServer {
+  id       Int       @id @default(autoincrement())
+  address  String
+  disabled Boolean   @default(false)
+  Channel  Channel[]
 }

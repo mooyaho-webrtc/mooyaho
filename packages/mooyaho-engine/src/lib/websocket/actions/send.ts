@@ -37,6 +37,11 @@ type ListSessionsSuccess = {
   sessions: { id: string; user: any }[]
 }
 
+type EnterSuccessAction = {
+  type: 'enterSuccess'
+  sfuEnabled: boolean
+}
+
 type EnteredAction = {
   type: 'entered'
   sessionId: string
@@ -99,6 +104,7 @@ export type SendAction =
   | CandidatedAction
   | IntegratedUserAction
   | SFUAnswerAction
+  | EnterSuccessAction
 
 const actionCreators = {
   connected: (id: string, token: string): ConnectedAction => ({
@@ -168,6 +174,10 @@ const actionCreators = {
   SFUAnswer: (sdp: string): SFUAnswerAction => ({
     type: 'SFUAnswer',
     sdp,
+  }),
+  enterSuccess: (sfuEnabled: boolean): EnterSuccessAction => ({
+    type: 'enterSuccess',
+    sfuEnabled,
   }),
 }
 

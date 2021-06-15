@@ -1,0 +1,10 @@
+{
+  "title": "Create Channel Body",
+  "type": "object",
+  "properties": {
+    "sfuEnabled": {
+      "type": "boolean",
+      "description": "true or omit this value"
+    }
+  }
+}

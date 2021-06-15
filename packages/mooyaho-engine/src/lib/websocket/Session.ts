@@ -14,6 +14,8 @@ import channelService from '../../services/channelService'
 import config from '../../configLoader'
 import { Client } from 'mooyaho-grpc'
 
+const grpcClient = new Client('localhost:50000')
+
 const { SESSION_SECRET_KEY } = process.env
 
 if (!SESSION_SECRET_KEY) {
@@ -98,6 +100,10 @@ class Session {
         this.handleSFUCall(action.sdp)
         break
       }
+      case 'SFUCandidate': {
+        this.handleSFUCandidate(action.candidate)
+        break
+      }
     }
   }
 
@@ -128,7 +134,7 @@ class Session {
   }
 
   private async handleEnter(channelId: string) {
-    const channel = channelService.findById(channelId)
+    const channel = await channelService.findById(channelId)
     if (!channel) {
       // TODO: send error
       return
@@ -141,6 +147,8 @@ class Session {
     }
 
     this.subscribe(prefixer.channel(channelId))
+    this.sendJSON(actionCreators.enterSuccess(!!channel.sfuServerId))
+
     channelHelper.enter(channelId, this.id, user)
     this.currentChannel = channelId
   }
@@ -203,16 +211,27 @@ class Session {
   }
 
   async handleSFUCall(sdp: string) {
-    const client = new Client('localhost:50000')
     try {
-      const result = await client.call({
+      const result = await grpcClient.call({
         sessionId: this.id,
         sdp,
+      })
+      grpcClient.listenSignal(this.id, candidate => {
+        console.log(candidate)
       })
       this.sendJSON(actionCreators.SFUAnswer(result))
     } catch (e) {
       console.log(e)
     }
+  }
+
+  async handleSFUCandidate(candidate: any) {
+    try {
+      grpcClient.clientIcecandidate({
+        sessionId: this.id,
+        candidate: JSON.stringify(candidate),
+      })
+    } catch (e) {}
   }
 
   public sendSubscriptionMessage(key: string, message: any) {

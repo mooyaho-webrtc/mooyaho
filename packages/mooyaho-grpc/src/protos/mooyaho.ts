@@ -10,6 +10,7 @@ type SubtypeConstructor<Constructor extends new (...args: any) => any, Subtype> 
 export interface ProtoGrpcType {
   mooyaho: {
     Empty: MessageTypeDefinition
+    ListenSignalRequest: MessageTypeDefinition
     Mooyaho: SubtypeConstructor<typeof grpc.Client, _mooyaho_MooyahoClient> & { service: _mooyaho_MooyahoDefinition }
     Signal: MessageTypeDefinition
   }

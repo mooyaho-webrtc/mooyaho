@@ -9,8 +9,18 @@ const mooyahoServer: MooyahoHandlers = {
       sdp: '1234',
     })
   },
-  Icecandidate(call, callback) {
-    callback(null, null)
+  ClientIcecandidate(call, callback) {
+    console.log('clientIcecandidate', call.request)
+    callback(null, {})
+  },
+  ListenSignal(call) {
+    call.write({
+      candidate: 'hello',
+    })
+    call.write({
+      candidate: 'world',
+    })
+    call.end()
   },
 }
 
