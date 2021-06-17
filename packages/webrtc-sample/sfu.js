@@ -4,26 +4,35 @@ const ws = new WebSocket("ws://localhost:8081/websocket");
 
 const rtcConfiguration = {};
 
-ws.addEventListener("message", (event) => {
-  handleMessage(event.data.toString());
-});
-
 ws.addEventListener("open", () => {
   integrateUser("tester");
 });
 
+ws.addEventListener("message", (event) => {
+  handleMessage(event.data.toString());
+});
+
 function sendJSON(object) {
   const message = JSON.stringify(object);
-  console.log(message);
+  console.group("Send");
+  console.log(JSON.stringify(object, null, 2));
+  console.groupEnd("Send");
   ws.send(message);
 }
 
 let sessionId = null;
 const localPeers = {};
 
+const config = {
+  sfuEnabled: false,
+};
+
 function handleMessage(message) {
   try {
     const action = JSON.parse(message);
+    console.group("Receive");
+    console.log(JSON.stringify(action, null, 2));
+    console.groupEnd("Receive");
     if (!action.type) {
       throw new Error("There is no type in action");
     }
@@ -35,9 +44,9 @@ function handleMessage(message) {
         break;
       case "entered":
         if (action.sessionId === sessionId) {
-          listSessions();
           break;
         }
+        if (config.sfuEnabled) return;
         call(action.sessionId);
         break;
       case "called":
@@ -48,6 +57,15 @@ function handleMessage(message) {
         break;
       case "candidated":
         candidated(action.from, action.candidate);
+        break;
+      case "enterSuccess":
+        enterSuccess(action.sfuEnabled);
+        break;
+      case "SFUAnswer":
+        sfuAnswer(action.sdp);
+        break;
+      case "SFUCandidated":
+        sfuCandidated(action.candidate);
         break;
     }
   } catch (e) {
@@ -83,14 +101,15 @@ function listSessions() {
 }
 
 async function call(to) {
-  const stream = localStream;
+  const stream = await createMediaStream();
 
   const localPeer = new RTCPeerConnection(rtcConfiguration);
+
+  localPeers[to] = localPeer;
   localPeer.addEventListener("connectionstatechange", (e) => {
+    console.log("helloworld");
     console.log({ connectionState: e.target.connectionState });
   });
-  localPeers[to] = localPeer;
-
   localPeer.addEventListener("icecandidate", (e) => {
     icecandidate(to, e.candidate);
   });
@@ -214,6 +233,63 @@ function integrateUser(displayName) {
     },
   });
 }
+
+let sfuPeerConnection = null;
+
+function enterSuccess(sfuEnabled) {
+  config.sfuEnabled = sfuEnabled;
+  listSessions();
+  if (!sfuEnabled) return;
+  sfuCall();
+}
+
+async function sfuCall() {
+  const sfuPeer = new RTCPeerConnection(rtcConfiguration);
+  sfuPeerConnection = sfuPeer;
+  sfuPeer.addEventListener("icecandidate", (e) => {
+    sfuCandidate(e.candidate);
+  });
+  sfuPeer.addEventListener("connectionstatechange", (e) => {
+    console.log("helloworld");
+    console.log({ connectionState: e.target.connectionState });
+  });
+  localStream.getTracks().forEach((track) => {
+    sfuPeer.addTrack(track, localStream);
+  });
+  const offer = await sfuPeer.createOffer();
+  sfuPeer.setLocalDescription(offer);
+
+  sendJSON({
+    type: "SFUCall",
+    sdp: offer.sdp,
+  });
+}
+
+async function sfuAnswer(sdp) {
+  if (!sfuPeerConnection) {
+    console.error("sfuPeer does not exist");
+    return;
+  }
+  await sfuPeerConnection.setRemoteDescription({
+    type: "answer",
+    sdp,
+  });
+
+  console.log("processed answer");
+}
+
+function sfuCandidate(candidate) {
+  sendJSON({
+    type: "SFUCandidate",
+    candidate,
+  });
+}
+
+function sfuCandidated(candidate) {
+  sfuPeerConnection.addIceCandidate(candidate);
+}
+
+window.enterSuccess = enterSuccess;
 
 window.integrateUser = integrateUser;
 

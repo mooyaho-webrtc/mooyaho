@@ -13,6 +13,7 @@ message Signal {
   string sessionId = 2;
   string sdp = 3; // for offer / answer
   string candidate = 4; // for icecandidate
+  string channelId = 5;
 }
 
 message ListenSignalRequest {

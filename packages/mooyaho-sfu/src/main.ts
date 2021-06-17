@@ -1,26 +1,54 @@
 import { ServerCredentials, Server } from '@grpc/grpc-js'
 import proto, { MooyahoHandlers } from 'mooyaho-grpc'
+import ChannelManager from './channel/ChannelManager'
+import ConnectionManager from './channel/ConnectionManager'
 
 const server = new Server()
 
+const channels = new ChannelManager()
+const connections = new ConnectionManager()
+
 const mooyahoServer: MooyahoHandlers = {
-  Call(call, callback) {
+  async Call(call, callback) {
+    /*
+      1. create or get channel
+      2. create new connection via connection manager
+      3. push connection to the channel
+    */
+    const { channelId, sdp, sessionId } = call.request
+    const channel = channels.getChannelById(call.request.channelId)
+    const connection = connections.getConnectionById(sessionId)
+    channel.addConnection(connection)
+    const answer = await connection.receiveCall(sdp)
+
     callback(null, {
-      sdp: '1234',
+      sdp: answer.sdp,
     })
   },
   ClientIcecandidate(call, callback) {
-    console.log('clientIcecandidate', call.request)
+    const connection = connections.getConnectionById(call.request.sessionId)
+    try {
+      const parsedCandidate = JSON.parse(call.request.candidate)
+      connection?.addIceCandidate(parsedCandidate)
+    } catch (e) {}
+
     callback(null, {})
   },
   ListenSignal(call) {
-    call.write({
-      candidate: 'hello',
+    const connection = connections.getConnectionById(call.request.sessionId)
+    if (!connection) {
+      call.end()
+      return
+    }
+
+    connection.registerCandidateHandler(candidate => {
+      const str = JSON.stringify(candidate)
+      call.write({ candidate: str })
     })
-    call.write({
-      candidate: 'world',
-    })
-    call.end()
+
+    connection.exitCandidate = () => {
+      call.end()
+    }
   },
 }
 

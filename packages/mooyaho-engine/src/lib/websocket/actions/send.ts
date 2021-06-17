@@ -90,6 +90,11 @@ type SFUAnswerAction = {
   sdp: string
 }
 
+type SFUCandidatedAction = {
+  type: 'SFUCandidated'
+  candidate: any
+}
+
 export type SendAction =
   | ConnectedAction
   | ReuseIdSuccessAction
@@ -105,6 +110,7 @@ export type SendAction =
   | IntegratedUserAction
   | SFUAnswerAction
   | EnterSuccessAction
+  | SFUCandidatedAction
 
 const actionCreators = {
   connected: (id: string, token: string): ConnectedAction => ({
@@ -178,6 +184,10 @@ const actionCreators = {
   enterSuccess: (sfuEnabled: boolean): EnterSuccessAction => ({
     type: 'enterSuccess',
     sfuEnabled,
+  }),
+  SFUCandidated: (candidate: any): SFUCandidatedAction => ({
+    type: 'SFUCandidated',
+    candidate,
   }),
 }
 

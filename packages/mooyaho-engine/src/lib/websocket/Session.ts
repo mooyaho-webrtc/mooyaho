@@ -211,13 +211,18 @@ class Session {
   }
 
   async handleSFUCall(sdp: string) {
+    if (!this.currentChannel) return
     try {
       const result = await grpcClient.call({
+        channelId: this.currentChannel,
         sessionId: this.id,
         sdp,
       })
-      grpcClient.listenSignal(this.id, candidate => {
-        console.log(candidate)
+      await grpcClient.listenSignal(this.id, candidate => {
+        try {
+          const parsedCandidate = JSON.parse(candidate)
+          this.sendJSON(actionCreators.SFUCandidated(parsedCandidate))
+        } catch (e) {}
       })
       this.sendJSON(actionCreators.SFUAnswer(result))
     } catch (e) {

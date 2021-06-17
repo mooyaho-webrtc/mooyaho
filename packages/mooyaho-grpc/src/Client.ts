@@ -13,11 +13,12 @@ export class Client {
     )
   }
 
-  async call({ sessionId, sdp }: CallParams) {
+  async call({ sessionId, sdp, channelId }: CallParams) {
     const callAsync = promisify(this.client.call).bind(this.client)
     const res = await callAsync({
       sessionId,
       sdp,
+      channelId,
     })
     return res!.sdp
   }
@@ -44,6 +45,7 @@ export class Client {
 type CallParams = {
   sessionId: string
   sdp: string
+  channelId: string
 }
 
 type ClientIcecandidateParams = {
