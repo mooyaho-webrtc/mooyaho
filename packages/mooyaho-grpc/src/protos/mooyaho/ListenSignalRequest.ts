@@ -2,9 +2,7 @@
 
 
 export interface ListenSignalRequest {
-  'sessionId'?: (string);
 }
 
 export interface ListenSignalRequest__Output {
-  'sessionId': (string);
 }

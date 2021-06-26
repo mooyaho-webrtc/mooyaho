@@ -85,14 +85,21 @@ type IntegratedUserAction = {
   }
 }
 
+type SFUCalledAction = {
+  type: 'SFUCalled'
+  fromSessionId: string
+  sdp: string
+}
+
 type SFUAnswerAction = {
-  type: 'SFUAnswer'
+  type: 'SFUAnswered'
   sdp: string
 }
 
 type SFUCandidatedAction = {
   type: 'SFUCandidated'
   candidate: any
+  fromSessionId?: string
 }
 
 export type SendAction =
@@ -111,6 +118,7 @@ export type SendAction =
   | SFUAnswerAction
   | EnterSuccessAction
   | SFUCandidatedAction
+  | SFUCalledAction
 
 const actionCreators = {
   connected: (id: string, token: string): ConnectedAction => ({
@@ -177,17 +185,26 @@ const actionCreators = {
     type: 'integrated',
     user,
   }),
-  SFUAnswer: (sdp: string): SFUAnswerAction => ({
-    type: 'SFUAnswer',
+  SFUAnswered: (sdp: string): SFUAnswerAction => ({
+    type: 'SFUAnswered',
     sdp,
   }),
   enterSuccess: (sfuEnabled: boolean): EnterSuccessAction => ({
     type: 'enterSuccess',
     sfuEnabled,
   }),
-  SFUCandidated: (candidate: any): SFUCandidatedAction => ({
+  SFUCandidated: (
+    candidate: any,
+    fromSessionId?: string
+  ): SFUCandidatedAction => ({
     type: 'SFUCandidated',
     candidate,
+    fromSessionId,
+  }),
+  SFUCalled: (sdp: string, fromSessionId: string): SFUCalledAction => ({
+    type: 'SFUCalled',
+    fromSessionId,
+    sdp,
   }),
 }
 

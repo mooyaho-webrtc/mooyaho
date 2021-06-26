@@ -61,11 +61,14 @@ function handleMessage(message) {
       case "enterSuccess":
         enterSuccess(action.sfuEnabled);
         break;
-      case "SFUAnswer":
-        sfuAnswer(action.sdp);
+      case "SFUAnswered":
+        sfuAnswered(action.sdp);
         break;
       case "SFUCandidated":
-        sfuCandidated(action.candidate);
+        sfuCandidated(action.candidate, action.fromSessionId);
+        break;
+      case "SFUCalled":
+        sfuCalled(action.fromSessionId, action.sdp);
         break;
     }
   } catch (e) {
@@ -79,7 +82,7 @@ async function createMediaStream() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: true,
-      video: true,
+      video: { width: 426, height: 240 },
     });
     return stream;
   } catch (e) {
@@ -106,10 +109,7 @@ async function call(to) {
   const localPeer = new RTCPeerConnection(rtcConfiguration);
 
   localPeers[to] = localPeer;
-  localPeer.addEventListener("connectionstatechange", (e) => {
-    console.log("helloworld");
-    console.log({ connectionState: e.target.connectionState });
-  });
+  localPeer.addEventListener("connectionstatechange", (e) => {});
   localPeer.addEventListener("icecandidate", (e) => {
     icecandidate(to, e.candidate);
   });
@@ -129,7 +129,6 @@ async function call(to) {
   });
 
   const offer = await localPeer.createOffer();
-  console.log("offer: ", offer);
   await localPeer.setLocalDescription(offer);
 
   sendJSON({
@@ -181,7 +180,6 @@ async function answered(from, description) {
     return;
   }
   await localPeer.setRemoteDescription(description);
-  console.log(`setRemoteDescription success for ${from}`);
 }
 
 function icecandidate(to, candidate) {
@@ -201,7 +199,6 @@ function candidated(from, candidate) {
 
   try {
     localPeer.addIceCandidate(candidate);
-    console.log(`Candidate from ${from} success!`);
   } catch (e) {
     console.error(`Failed to candidate: ${e.toString()}`);
   }
@@ -249,13 +246,13 @@ async function sfuCall() {
   sfuPeer.addEventListener("icecandidate", (e) => {
     sfuCandidate(e.candidate);
   });
-  sfuPeer.addEventListener("connectionstatechange", (e) => {
-    console.log("helloworld");
-    console.log({ connectionState: e.target.connectionState });
-  });
+  sfuPeer.addEventListener("connectionstatechange", (e) => {});
+  window.sfuPeer = sfuPeer;
+
   localStream.getTracks().forEach((track) => {
     sfuPeer.addTrack(track, localStream);
   });
+
   const offer = await sfuPeer.createOffer();
   sfuPeer.setLocalDescription(offer);
 
@@ -265,7 +262,7 @@ async function sfuCall() {
   });
 }
 
-async function sfuAnswer(sdp) {
+async function sfuAnswered(sdp) {
   if (!sfuPeerConnection) {
     console.error("sfuPeer does not exist");
     return;
@@ -278,20 +275,65 @@ async function sfuAnswer(sdp) {
   console.log("processed answer");
 }
 
-function sfuCandidate(candidate) {
+function sfuCandidate(candidate, sessionId) {
   sendJSON({
     type: "SFUCandidate",
     candidate,
+    sessionId,
   });
 }
 
-function sfuCandidated(candidate) {
-  sfuPeerConnection.addIceCandidate(candidate);
+function sfuCandidated(candidate, fromSessionId) {
+  if (!fromSessionId) {
+    sfuPeerConnection.addIceCandidate(candidate);
+  } else {
+    const localPeer = localPeers[fromSessionId];
+    if (!localPeer) {
+      console.error("localPeer not found");
+      return;
+    }
+    localPeer.addIceCandidate(candidate);
+  }
 }
 
 window.enterSuccess = enterSuccess;
 
 window.integrateUser = integrateUser;
+
+async function sfuCalled(fromSessionId, sdp) {
+  const localPeer = new RTCPeerConnection(rtcConfiguration);
+  localPeers[fromSessionId] = localPeer;
+
+  localPeer.addEventListener("icecandidate", (e) => {
+    sfuCandidate(e.candidate, fromSessionId);
+  });
+  localPeer.addEventListener("connectionstatechange", (e) => {
+    if (sfuPeer.connectionState === "connected") {
+    }
+  });
+
+  const video = document.createElement("video");
+  document.body.appendChild(video);
+  video.autoplay = true;
+  video.addEventListener("error", (e) => {
+    console.log(e);
+  });
+
+  localPeer.addEventListener("track", (ev) => {
+    console.log("track", ev.streams);
+    video.srcObject = ev.streams[0];
+  });
+
+  await localPeer.setRemoteDescription({ type: "offer", sdp });
+  const answer = await localPeer.createAnswer();
+  await localPeer.setLocalDescription(answer);
+
+  sendJSON({
+    type: "SFUAnswer",
+    sessionId,
+    sdp: answer.sdp,
+  });
+}
 
 // const button = document.body.querySelector('#btnLoadCam');
 

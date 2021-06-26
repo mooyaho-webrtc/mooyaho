@@ -17,4 +17,8 @@ export default class ConnectionManager {
   add(id: string, connection: Connection) {
     this.connections.set(id, connection)
   }
+
+  getAll() {
+    return this.connections.values()
+  }
 }

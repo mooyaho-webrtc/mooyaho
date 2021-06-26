@@ -16,6 +16,31 @@ import { Client } from 'mooyaho-grpc'
 
 const grpcClient = new Client('localhost:50000')
 
+function startListenSignal() {
+  grpcClient
+    .listenSignal(signal => {
+      if (signal.type === 'icecandidate') {
+        subscription.dispatch(
+          prefixer.direct(signal.sessionId),
+          actionCreators.SFUCandidated(
+            JSON.parse(signal.candidate),
+            signal.fromSessionId
+          )
+        )
+      } else if (signal.type === 'offer') {
+        subscription.dispatch(
+          prefixer.direct(signal.sessionId),
+          actionCreators.SFUCalled(signal.sdp, signal.fromSessionId)
+        )
+      }
+    })
+    .catch(e => {
+      setTimeout(startListenSignal, 5000)
+    })
+}
+
+startListenSignal()
+
 const { SESSION_SECRET_KEY } = process.env
 
 if (!SESSION_SECRET_KEY) {
@@ -101,8 +126,11 @@ class Session {
         break
       }
       case 'SFUCandidate': {
-        this.handleSFUCandidate(action.candidate)
+        this.handleSFUCandidate(action.candidate, action.sessionId)
         break
+      }
+      case 'SFUAnswer': {
+        this.handleSFUAnswer(action.sessionId, action.sdp)
       }
     }
   }
@@ -218,25 +246,35 @@ class Session {
         sessionId: this.id,
         sdp,
       })
-      await grpcClient.listenSignal(this.id, candidate => {
-        try {
-          const parsedCandidate = JSON.parse(candidate)
-          this.sendJSON(actionCreators.SFUCandidated(parsedCandidate))
-        } catch (e) {}
-      })
-      this.sendJSON(actionCreators.SFUAnswer(result))
+
+      this.sendJSON(actionCreators.SFUAnswered(result))
     } catch (e) {
       console.log(e)
     }
   }
 
-  async handleSFUCandidate(candidate: any) {
+  async handleSFUCandidate(candidate: any, sessionId?: string) {
     try {
-      grpcClient.clientIcecandidate({
-        sessionId: this.id,
-        candidate: JSON.stringify(candidate),
-      })
+      // ensures answer first
+      setTimeout(() => {
+        grpcClient.clientIcecandidate({
+          sessionId,
+          fromSessionId: this.id,
+          candidate: JSON.stringify(candidate),
+        })
+      }, 50)
     } catch (e) {}
+  }
+
+  handleSFUAnswer(sessionId: string, sdp: string) {
+    if (!this.currentChannel) return
+    grpcClient.answer({
+      channelId: this.currentChannel,
+      fromSessionId: this.id,
+      sdp,
+      sessionId,
+    })
+    console.log('hello')
   }
 
   public sendSubscriptionMessage(key: string, message: any) {

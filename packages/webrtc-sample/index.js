@@ -100,12 +100,14 @@ async function call(to) {
   video.autoplay = true;
 
   localPeer.addEventListener("track", (ev) => {
+    console.log({ streams: ev.streams });
     if (video.srcObject !== ev.streams[0]) {
       video.srcObject = ev.streams[0];
     }
   });
 
   stream.getTracks().forEach((track) => {
+    console.log(track);
     localPeer.addTrack(track, stream);
   });
 
@@ -121,8 +123,7 @@ async function call(to) {
 }
 
 async function answer(to, description) {
-  const stream = await createMediaStream();
-
+  const stream = localStream;
   const localPeer = new RTCPeerConnection(rtcConfiguration);
   localPeers[to] = localPeer;
 

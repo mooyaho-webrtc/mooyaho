@@ -23,9 +23,14 @@ export class Client {
     return res!.sdp
   }
 
-  async clientIcecandidate({ sessionId, candidate }: ClientIcecandidateParams) {
+  async clientIcecandidate({
+    fromSessionId,
+    sessionId,
+    candidate,
+  }: ClientIcecandidateParams) {
     this.client.clientIcecandidate(
       {
+        fromSessionId,
         sessionId,
         candidate,
       },
@@ -33,12 +38,37 @@ export class Client {
     )
   }
 
-  async listenSignal(sessionId: string, callback: (candidate: string) => void) {
-    const call = this.client.listenSignal({ sessionId })
-    call.on('data', (signal: Signal) => {
-      if (!signal.candidate) return
-      callback(signal.candidate)
+  async listenSignal(callback: (signal: CallbackSignal) => void) {
+    const call = this.client.listenSignal({})
+
+    return new Promise<void>((resolve, reject) => {
+      call.on('data', (signal: Signal) => {
+        callback({
+          type: signal.type as any,
+          candidate: signal.candidate!,
+          sessionId: signal.sessionId!,
+          fromSessionId: signal.fromSessionId,
+          sdp: signal.sdp,
+        })
+      })
+      call.on('error', e => {
+        reject(e)
+      })
+      call.on('close', () => {
+        resolve()
+      })
     })
+  }
+
+  async answer({ sessionId, sdp, channelId, fromSessionId }: AnswerParams) {
+    const answerAsync = promisify(this.client.answer).bind(this.client)
+    await answerAsync({
+      sessionId,
+      sdp,
+      channelId,
+      fromSessionId,
+    })
+    return true
   }
 }
 
@@ -48,7 +78,29 @@ type CallParams = {
   channelId: string
 }
 
-type ClientIcecandidateParams = {
+type AnswerParams = {
   sessionId: string
+  sdp: string
+  channelId: string
+  fromSessionId: string
+}
+
+type ClientIcecandidateParams = {
+  fromSessionId: string
+  sessionId?: string
   candidate: string
 }
+
+type CallbackSignal =
+  | {
+      type: 'icecandidate'
+      sessionId: string
+      candidate: string
+      fromSessionId?: string
+    }
+  | {
+      type: 'offer'
+      sessionId: string
+      sdp: string
+      fromSessionId: string
+    }

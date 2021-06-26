@@ -7,6 +7,7 @@ export interface Signal {
   'sdp'?: (string);
   'candidate'?: (string);
   'channelId'?: (string);
+  'fromSessionId'?: (string);
 }
 
 export interface Signal__Output {
@@ -15,4 +16,5 @@ export interface Signal__Output {
   'sdp': (string);
   'candidate': (string);
   'channelId': (string);
+  'fromSessionId': (string);
 }

@@ -2,6 +2,7 @@ import { ServerCredentials, Server } from '@grpc/grpc-js'
 import proto, { MooyahoHandlers } from 'mooyaho-grpc'
 import ChannelManager from './channel/ChannelManager'
 import ConnectionManager from './channel/ConnectionManager'
+import { registerDispatchSignal } from './getDispatchSignal'
 
 const server = new Server()
 
@@ -16,7 +17,7 @@ const mooyahoServer: MooyahoHandlers = {
       3. push connection to the channel
     */
     const { channelId, sdp, sessionId } = call.request
-    const channel = channels.getChannelById(call.request.channelId)
+    const channel = channels.getChannelById(channelId)
     const connection = connections.getConnectionById(sessionId)
     channel.addConnection(connection)
     const answer = await connection.receiveCall(sdp)
@@ -26,29 +27,44 @@ const mooyahoServer: MooyahoHandlers = {
     })
   },
   ClientIcecandidate(call, callback) {
-    const connection = connections.getConnectionById(call.request.sessionId)
+    const { sessionId, candidate, fromSessionId } = call.request
+    const connection = connections.getConnectionById(fromSessionId)
     try {
-      const parsedCandidate = JSON.parse(call.request.candidate)
-      connection?.addIceCandidate(parsedCandidate)
+      const parsedCandidate = JSON.parse(candidate)
+      if (sessionId) {
+        connection?.addIceCandidateForOutputPeer(sessionId, parsedCandidate)
+      } else {
+        connection?.addIceCandidate(parsedCandidate)
+      }
     } catch (e) {}
 
     callback(null, {})
   },
   ListenSignal(call) {
-    const connection = connections.getConnectionById(call.request.sessionId)
-    if (!connection) {
-      call.end()
-      return
-    }
-
-    connection.registerCandidateHandler(candidate => {
-      const str = JSON.stringify(candidate)
-      call.write({ candidate: str })
+    registerDispatchSignal(signal => {
+      call.write(signal)
     })
-
-    connection.exitCandidate = () => {
-      call.end()
-    }
+    // const connection = connections.getConnectionById(call.request.sessionId)
+    // if (!connection) {
+    //   call.end()
+    //   return
+    // }
+    // connection.registerCandidateHandler(candidate => {
+    //   const str = JSON.stringify(candidate)
+    //   call.write({ candidate: str })
+    // })
+    // connection.exitCandidate = () => {
+    //   call.end()
+    // }
+  },
+  Answer(call, callback) {
+    callback(null, {})
+    const { channelId, sessionId, fromSessionId, sdp } = call.request
+    const channel = channels.getChannelById(channelId)
+    if (!channel) return
+    const connection = channel.getConnectionById(fromSessionId)
+    if (!connection) return
+    connection.receiveAnswer(sessionId, sdp)
   },
 }
 
