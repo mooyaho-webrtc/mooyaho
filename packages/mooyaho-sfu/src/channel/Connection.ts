@@ -2,6 +2,8 @@ import Channel from './Channel'
 import { RTCPeerConnection, MediaStream, RTCIceCandidate } from 'wrtc'
 import getDispatchSignal from '../getDispatchSignal'
 
+const config = {}
+
 export default class Connection {
   channel: Channel | null = null
   peerConnection: RTCPeerConnection | null = null
@@ -15,11 +17,13 @@ export default class Connection {
     const { stream } = connection
     if (!stream) return
 
-    const peer = new RTCPeerConnection()
+    const peer = new RTCPeerConnection(config)
+
     this.outputPeerConnections.set(connection.id, peer)
     peer.addEventListener('icecandidate', e => {
       if (!e.candidate) return
       const dispatch = getDispatchSignal()
+
       dispatch({
         type: 'icecandidate',
         sessionId: this.id,
@@ -35,6 +39,7 @@ export default class Connection {
     const offer = await peer.createOffer()
     const dispatch = getDispatchSignal()
     peer.setLocalDescription(offer)
+
     dispatch({
       type: 'offer',
       sessionId: this.id,
@@ -44,7 +49,7 @@ export default class Connection {
   }
 
   async receiveCall(sdp: string) {
-    const peer = new RTCPeerConnection()
+    const peer = new RTCPeerConnection(config)
     this.peerConnection = peer
 
     peer.addEventListener('track', e => {
@@ -77,6 +82,7 @@ export default class Connection {
         connections.forEach(connection => this.call(connection))
 
         // TODO: (2) 기존 사용자들에게 새로 전화를 걸기
+        connections.forEach(connection => connection.call(this))
       }
     })
 
@@ -127,20 +133,6 @@ export default class Connection {
     }
     return this.stream
   }
-
-  // async setupInitialStreams() {
-  //   if (!this.channel || !this.peerConnection) return
-  //   const connections = this.channel!.getConnectionsExcept(this.id)
-  //   const streams = await Promise.all(connections.map(c => c.getStream()))
-  //   const peer = this.peerConnection
-
-  //   streams.forEach(stream => {
-  //     stream.getTracks().forEach(track => {
-  //       console.log(`adding stream ${stream.id}`)
-  //       peer.addTrack(track, stream)
-  //     })
-  //   })
-  // }
 }
 
 const sleep = (t: number) => new Promise(resolve => setTimeout(resolve, t))

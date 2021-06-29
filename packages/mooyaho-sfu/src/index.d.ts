@@ -35,4 +35,15 @@ declare module 'wrtc' {
     prototype: RTCIceCandidate
     new (candidateInitDict?: RTCIceCandidateInit): RTCIceCandidate
   }
+
+  interface RTCSessionDescription {
+    readonly sdp: string
+    readonly type: RTCSdpType
+    toJSON(): any
+  }
+
+  export var RTCSessionDescription: {
+    prototype: RTCSessionDescription
+    new (descriptionInitDict: RTCSessionDescriptionInit): RTCSessionDescription
+  }
 }

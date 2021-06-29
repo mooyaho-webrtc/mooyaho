@@ -35,7 +35,7 @@ function startListenSignal() {
       }
     })
     .catch(e => {
-      setTimeout(startListenSignal, 5000)
+      setTimeout(startListenSignal, 250)
     })
 }
 

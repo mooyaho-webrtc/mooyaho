@@ -14,9 +14,9 @@ ws.addEventListener("message", (event) => {
 
 function sendJSON(object) {
   const message = JSON.stringify(object);
-  console.group("Send");
-  console.log(JSON.stringify(object, null, 2));
-  console.groupEnd("Send");
+  // console.group("Send");
+  // console.log(JSON.stringify(object, null, 2));
+  // console.groupEnd("Send");
   ws.send(message);
 }
 
@@ -30,9 +30,9 @@ const config = {
 function handleMessage(message) {
   try {
     const action = JSON.parse(message);
-    console.group("Receive");
-    console.log(JSON.stringify(action, null, 2));
-    console.groupEnd("Receive");
+    // console.group("Receive");
+    // console.log(JSON.stringify(action, null, 2));
+    // console.groupEnd("Receive");
     if (!action.type) {
       throw new Error("There is no type in action");
     }
@@ -267,10 +267,12 @@ async function sfuAnswered(sdp) {
     console.error("sfuPeer does not exist");
     return;
   }
-  await sfuPeerConnection.setRemoteDescription({
-    type: "answer",
-    sdp,
-  });
+  await sfuPeerConnection.setRemoteDescription(
+    new RTCSessionDescription({
+      type: "answer",
+      sdp,
+    })
+  );
 
   console.log("processed answer");
 }
@@ -302,6 +304,7 @@ window.integrateUser = integrateUser;
 
 async function sfuCalled(fromSessionId, sdp) {
   const localPeer = new RTCPeerConnection(rtcConfiguration);
+
   localPeers[fromSessionId] = localPeer;
 
   localPeer.addEventListener("icecandidate", (e) => {
@@ -315,22 +318,22 @@ async function sfuCalled(fromSessionId, sdp) {
   const video = document.createElement("video");
   document.body.appendChild(video);
   video.autoplay = true;
-  video.addEventListener("error", (e) => {
-    console.log(e);
-  });
 
   localPeer.addEventListener("track", (ev) => {
     console.log("track", ev.streams);
-    video.srcObject = ev.streams[0];
+    if (video.srcObject !== ev.streams[0]) {
+      video.srcObject = ev.streams[0];
+    }
   });
 
   await localPeer.setRemoteDescription({ type: "offer", sdp });
+
   const answer = await localPeer.createAnswer();
   await localPeer.setLocalDescription(answer);
 
   sendJSON({
     type: "SFUAnswer",
-    sessionId,
+    sessionId: fromSessionId,
     sdp: answer.sdp,
   });
 }
