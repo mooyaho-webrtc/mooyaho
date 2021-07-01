@@ -66,6 +66,10 @@ const mooyahoServer: MooyahoHandlers = {
     if (!connection) return
     connection.receiveAnswer(sessionId, sdp)
   },
+  Leave(call, callback) {
+    callback(null, {})
+    // TODO: implement user leave
+  },
 }
 
 server.addService(proto.mooyaho.Mooyaho.service, mooyahoServer)

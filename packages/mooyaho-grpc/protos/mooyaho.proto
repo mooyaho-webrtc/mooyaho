@@ -7,6 +7,7 @@ service Mooyaho {
   rpc ClientIcecandidate(Signal) returns (Empty) {}
   rpc ListenSignal(Empty) returns (stream Signal) {}
   rpc Answer(Signal) returns (Empty) {}
+  rpc Leave(LeaveParams) returns (Empty) {}
 }
 
 message Signal {
@@ -19,6 +20,11 @@ message Signal {
 }
 
 message ListenSignalRequest {
+}
+
+message LeaveParams {
+  string channelId = 1;
+  string sessionId = 2;
 }
 
 message Empty {}

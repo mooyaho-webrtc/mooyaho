@@ -83,6 +83,8 @@ export default class Connection {
 
         // TODO: (2) 기존 사용자들에게 새로 전화를 걸기
         connections.forEach(connection => connection.call(this))
+      } else {
+        console.log(peer.connectionState)
       }
     })
 

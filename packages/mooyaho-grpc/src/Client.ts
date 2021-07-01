@@ -70,6 +70,12 @@ export class Client {
     })
     return true
   }
+
+  async leave({ sessionId, channelId }: LeaveParams) {
+    const leaveAsync = promisify(this.client.leave).bind(this.client)
+    await leaveAsync({ sessionId, channelId })
+    return true
+  }
 }
 
 type CallParams = {
@@ -104,3 +110,8 @@ type CallbackSignal =
       sdp: string
       fromSessionId: string
     }
+
+type LeaveParams = {
+  channelId: string
+  sessionId: string
+}

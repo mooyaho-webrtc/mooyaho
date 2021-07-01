@@ -52,6 +52,7 @@ class Session {
   private token: string
   private currentChannel: string | null = null
   private unsubscriptionMap = new Map<string, () => void>()
+  connectedToSFU: boolean = false
 
   constructor(private socket: WebSocket) {
     this.id = v4()
@@ -175,6 +176,9 @@ class Session {
     }
 
     this.subscribe(prefixer.channel(channelId))
+    if (channel.sfuServerId) {
+      this.connectedToSFU = true
+    }
     this.sendJSON(actionCreators.enterSuccess(!!channel.sfuServerId))
 
     channelHelper.enter(channelId, this.id, user)
@@ -274,7 +278,6 @@ class Session {
       sdp,
       sessionId,
     })
-    console.log('hello')
   }
 
   public sendSubscriptionMessage(key: string, message: any) {
@@ -288,6 +291,12 @@ class Session {
     // remove from channel
     if (!this.currentChannel) return
     channelHelper.leave(this.currentChannel, this.id)
+    if (this.connectedToSFU) {
+      grpcClient.leave({
+        sessionId: this.id,
+        channelId: this.currentChannel,
+      })
+    }
   }
 }
 
