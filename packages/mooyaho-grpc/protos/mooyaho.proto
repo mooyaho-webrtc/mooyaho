@@ -19,9 +19,6 @@ message Signal {
   string fromSessionId = 6;
 }
 
-message ListenSignalRequest {
-}
-
 message LeaveParams {
   string channelId = 1;
   string sessionId = 2;
