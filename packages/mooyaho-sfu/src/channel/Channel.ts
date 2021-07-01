@@ -20,4 +20,11 @@ export default class Channel {
       connection => connection.id !== id
     )
   }
+
+  removeConnection(connection: Connection) {
+    this.connections.remove(connection.id)
+    Array.from(this.connections.getAll()).forEach(c => {
+      c.removeFromOutputConnections(connection.id)
+    })
+  }
 }

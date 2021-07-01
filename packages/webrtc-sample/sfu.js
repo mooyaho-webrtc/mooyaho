@@ -338,6 +338,15 @@ async function sfuCalled(fromSessionId, sdp) {
   });
 }
 
+function disconnect() {
+  sfuPeerConnection.close();
+  // localPeers.forEach((peer) => {
+  //   peer.close();
+  // });
+}
+
+window.disconnect = disconnect;
+
 // const button = document.body.querySelector('#btnLoadCam');
 
 // async function loadCamera() {

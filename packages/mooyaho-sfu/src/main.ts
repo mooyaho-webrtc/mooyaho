@@ -68,7 +68,10 @@ const mooyahoServer: MooyahoHandlers = {
   },
   Leave(call, callback) {
     callback(null, {})
-    // TODO: implement user leave
+    const { channelId, sessionId } = call.request
+    const channel = channels.getChannelById(channelId)
+    const connection = channel?.getConnectionById(sessionId)
+    connection?.dispose()
   },
 }
 

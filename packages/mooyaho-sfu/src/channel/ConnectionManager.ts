@@ -21,4 +21,8 @@ export default class ConnectionManager {
   getAll() {
     return this.connections.values()
   }
+
+  remove(id: string) {
+    this.connections.delete(id)
+  }
 }

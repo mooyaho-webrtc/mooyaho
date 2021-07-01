@@ -10,6 +10,7 @@ export default class Connection {
   stream: MediaStream | null = null
   outputPeerConnections = new Map<string, RTCPeerConnection>()
   outputPeerCandidateQueue = new Map<string, RTCIceCandidate[]>()
+  isConnected = false
 
   constructor(public id: string) {}
 
@@ -76,21 +77,31 @@ export default class Connection {
     })
 
     peer.addEventListener('connectionstatechange', e => {
-      if (peer.connectionState === 'connected') {
+      console.log(peer.connectionState)
+      if (peer.connectionState === 'connected' && !this.isConnected) {
+        this.isConnected = true
         const connections = this.channel!.getConnectionsExcept(this.id)
-        // TODO: (1) 채널에 있는 다른 세션들의 스트림을 보낼 수 있도록 각 세션마다 SFU -> Client (본인)로 전화 걸기
+        // (1) send other's stream to this peer
         connections.forEach(connection => this.call(connection))
-
-        // TODO: (2) 기존 사용자들에게 새로 전화를 걸기
+        // (2) send this peer's stream to other users
         connections.forEach(connection => connection.call(this))
-      } else {
-        console.log(peer.connectionState)
+      } else if (peer.connectionState === 'failed' && this.isConnected) {
+        this.dispose()
+        // remove this connection from SFU
       }
     })
 
     const answer = await peer.createAnswer()
     peer.setLocalDescription(answer)
     return answer
+  }
+
+  dispose() {
+    this.isConnected = false
+    this.peerConnection?.close()
+    this.outputPeerConnections.forEach(peer => peer.close())
+    this.channel?.removeConnection(this)
+    console.log('I am disposed...')
   }
 
   async receiveAnswer(sessionId: string, sdp: string) {
@@ -134,6 +145,12 @@ export default class Connection {
       await sleep(50)
     }
     return this.stream
+  }
+
+  removeFromOutputConnections(id: string) {
+    const peer = this.outputPeerConnections.get(id)
+    peer?.close()
+    this.outputPeerConnections.delete(id)
   }
 }
 
