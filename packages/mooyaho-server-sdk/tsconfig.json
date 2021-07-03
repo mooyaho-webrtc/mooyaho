@@ -1,0 +1,23 @@
+
+{
+  "compilerOptions": {
+     "strict": true,
+     "lib": [
+        "es5",
+        "es6",
+        "esnext",
+        "DOM"
+     ],
+     "target": "es2020",
+     "module": "commonjs",
+     "moduleResolution": "node",
+     "outDir": "./dist",
+     "emitDecoratorMetadata": true,
+     "experimentalDecorators": true,
+     "sourceMap": true,
+     "esModuleInterop": true,
+     "resolveJsonModule": true,
+     "allowJs": true,
+     "declaration": true
+  }
+}
