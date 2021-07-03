@@ -90,12 +90,6 @@ type IntegrateUserAction = {
   }
 }
 
-type SFUAnswerAction = {
-  type: 'SFUAnswer'
-  sessionId: string
-  sdp: string
-}
-
 const actionTypes = [
   'getId',
   'reuseId',
