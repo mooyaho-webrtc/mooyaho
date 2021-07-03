@@ -4,8 +4,10 @@ import IntegrateSessionParamsSchema from '../../schemas/sessions/integrate/param
 import { IntegrateSessionBody } from '../../schema-types/sessions/integrate/body'
 import IntegrateSessionBodySchema from '../../schemas/sessions/integrate/body.json'
 import sessionService from '../../services/sessionService'
+import protect from '../../lib/plugins/protect'
 
 const sessions: FastifyPluginAsync = async fastify => {
+  fastify.register(protect)
   fastify.post<{ Params: IntegrateSessionParams; Body: IntegrateSessionBody }>(
     '/:id',
     {

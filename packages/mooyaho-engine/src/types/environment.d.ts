@@ -4,6 +4,7 @@ declare global {
       NODE_ENV: 'development' | 'production'
       PORT?: string
       SESSION_SECRET_KEY?: string
+      API_KEY?: string
     }
   }
 }

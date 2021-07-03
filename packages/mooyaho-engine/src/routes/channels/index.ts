@@ -2,8 +2,10 @@ import { FastifyPluginAsync } from 'fastify'
 import channelService from '../../services/channelService'
 import CreateChannelBodySchema from '../../schemas/channels/create/body.json'
 import { CreateChannelBody } from '../../schema-types/channels/create/body'
+import protect from '../../lib/plugins/protect'
 
 const channels: FastifyPluginAsync = async fastify => {
+  fastify.register(protect)
   fastify.post<{ Body: CreateChannelBody }>(
     '/',
     {
