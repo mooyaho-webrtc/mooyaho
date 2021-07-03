@@ -3,7 +3,6 @@
  */
 
 import { SessionUser } from '../../../services/sessionService'
-import { Description } from './common'
 import { Message } from './receive'
 
 type ConnectedAction = {
