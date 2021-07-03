@@ -4,27 +4,11 @@ import { publishJSON } from './redis/createRedisClient'
 import prefixer from './redis/prefixer'
 
 const rtcHelper = {
-  call({
-    from,
-    to,
-    description,
-  }: {
-    from: string
-    to: string
-    description: Description
-  }) {
-    publishJSON(prefixer.direct(to), actionCreators.called(from, description))
+  call({ from, to, sdp }: { from: string; to: string; sdp: string }) {
+    publishJSON(prefixer.direct(to), actionCreators.called(from, sdp))
   },
-  answer({
-    from,
-    to,
-    description,
-  }: {
-    from: string
-    to: string
-    description: Description
-  }) {
-    publishJSON(prefixer.direct(to), actionCreators.answered(from, description))
+  answer({ from, to, sdp }: { from: string; to: string; sdp: string }) {
+    publishJSON(prefixer.direct(to), actionCreators.answered(from, sdp))
   },
   candidate({
     from,

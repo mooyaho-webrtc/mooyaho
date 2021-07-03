@@ -41,10 +41,10 @@ function handleMessage(message) {
         call(action.sessionId);
         break;
       case "called":
-        answer(action.from, action.description);
+        answer(action.from, action.sdp);
         break;
       case "answered":
-        answered(action.from, action.description);
+        answered(action.from, action.sdp);
         break;
       case "candidated":
         candidated(action.from, action.candidate);
@@ -118,11 +118,11 @@ async function call(to) {
   sendJSON({
     type: "call",
     to,
-    description: offer,
+    sdp: offer.sdp,
   });
 }
 
-async function answer(to, description) {
+async function answer(to, sdp) {
   const stream = localStream;
   const localPeer = new RTCPeerConnection(rtcConfiguration);
   localPeers[to] = localPeer;
@@ -145,24 +145,30 @@ async function answer(to, description) {
     localPeer.addTrack(track, stream);
   });
 
-  await localPeer.setRemoteDescription(description);
+  await localPeer.setRemoteDescription({
+    type: "offer",
+    sdp,
+  });
   const answer = await localPeer.createAnswer();
   await localPeer.setLocalDescription(answer);
 
   sendJSON({
     type: "answer",
     to,
-    description: answer,
+    sdp: answer.sdp,
   });
 }
 
-async function answered(from, description) {
+async function answered(from, sdp) {
   const localPeer = localPeers[from];
   if (!localPeer) {
     console.error(`localPeer ${from} does not exist`);
     return;
   }
-  await localPeer.setRemoteDescription(description);
+  await localPeer.setRemoteDescription({
+    type: "answer",
+    sdp,
+  });
   console.log(`setRemoteDescription success for ${from}`);
 }
 

@@ -37,22 +37,31 @@ type ListSessionsAction = {
   type: 'listSessions'
 }
 
-type CallAction = {
-  type: 'call'
-  to: string
-  description: Description
-}
+export type CallAction =
+  | {
+      type: 'call'
+      to: string
+      sdp: string
+      isSFU?: false
+    }
+  | {
+      type: 'call'
+      sdp: string
+      isSFU: true
+    }
 
-type AnswerAction = {
+export type AnswerAction = {
   type: 'answer'
   to: string
-  description: Description
+  sdp: string
+  isSFU?: boolean
 }
 
-type CandidateAction = {
+export type CandidateAction = {
   type: 'candidate'
   to: string
   candidate: any
+  isSFU?: boolean
 }
 
 export type Message =
@@ -81,17 +90,6 @@ type IntegrateUserAction = {
   }
 }
 
-type SFUCallAction = {
-  type: 'SFUCall'
-  sdp: string
-}
-
-type SFUCandidateAction = {
-  type: 'SFUCandidate'
-  candidate: any
-  sessionId: string
-}
-
 type SFUAnswerAction = {
   type: 'SFUAnswer'
   sessionId: string
@@ -111,9 +109,6 @@ const actionTypes = [
   'answer',
   'candidate',
   'integrateUser',
-  'SFUCall',
-  'SFUCandidate',
-  'SFUAnswer',
 ]
 
 export type ReceiveAction =
@@ -129,9 +124,6 @@ export type ReceiveAction =
   | AnswerAction
   | CandidateAction
   | IntegrateUserAction
-  | SFUCallAction
-  | SFUCandidateAction
-  | SFUAnswerAction
 
 export function isReceiveAction(object: any): object is ReceiveAction {
   if (!object?.type) return false

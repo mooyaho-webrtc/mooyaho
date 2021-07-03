@@ -62,19 +62,22 @@ type MessagedAction = {
 type CalledAction = {
   type: 'called'
   from: string
-  description: Description
+  sdp: string
+  isSFU?: boolean
 }
 
 type AnsweredAction = {
   type: 'answered'
-  from: string
-  description: Description
+  from?: string
+  sdp: string
+  isSFU?: boolean
 }
 
 type CandidatedAction = {
   type: 'candidated'
   from: string
   candidate: any
+  isSFU?: boolean
 }
 
 type IntegratedUserAction = {
@@ -83,23 +86,6 @@ type IntegratedUserAction = {
     id: string
     [key: string]: any
   }
-}
-
-type SFUCalledAction = {
-  type: 'SFUCalled'
-  fromSessionId: string
-  sdp: string
-}
-
-type SFUAnswerAction = {
-  type: 'SFUAnswered'
-  sdp: string
-}
-
-type SFUCandidatedAction = {
-  type: 'SFUCandidated'
-  candidate: any
-  fromSessionId?: string
 }
 
 export type SendAction =
@@ -115,10 +101,7 @@ export type SendAction =
   | AnsweredAction
   | CandidatedAction
   | IntegratedUserAction
-  | SFUAnswerAction
   | EnterSuccessAction
-  | SFUCandidatedAction
-  | SFUCalledAction
 
 const actionCreators = {
   connected: (id: string, token: string): ConnectedAction => ({
@@ -163,20 +146,31 @@ const actionCreators = {
     message,
     sessionId,
   }),
-  called: (from: string, description: Description): CalledAction => ({
+  called: (from: string, sdp: string, isSFU?: boolean): CalledAction => ({
     type: 'called',
     from,
-    description,
+    sdp,
+    isSFU,
   }),
-  answered: (from: string, description: Description): AnsweredAction => ({
+  answered: (
+    from: string | undefined,
+    sdp: string,
+    isSFU?: boolean
+  ): AnsweredAction => ({
     type: 'answered',
     from,
-    description,
+    sdp,
+    isSFU,
   }),
-  candidated: (from: string, candidate: any): CandidatedAction => ({
+  candidated: (
+    from: string,
+    candidate: any,
+    isSFU?: boolean
+  ): CandidatedAction => ({
     type: 'candidated',
     from,
     candidate,
+    isSFU,
   }),
   integrated: (user: {
     id: string
@@ -185,26 +179,9 @@ const actionCreators = {
     type: 'integrated',
     user,
   }),
-  SFUAnswered: (sdp: string): SFUAnswerAction => ({
-    type: 'SFUAnswered',
-    sdp,
-  }),
   enterSuccess: (sfuEnabled: boolean): EnterSuccessAction => ({
     type: 'enterSuccess',
     sfuEnabled,
-  }),
-  SFUCandidated: (
-    candidate: any,
-    fromSessionId?: string
-  ): SFUCandidatedAction => ({
-    type: 'SFUCandidated',
-    candidate,
-    fromSessionId,
-  }),
-  SFUCalled: (sdp: string, fromSessionId: string): SFUCalledAction => ({
-    type: 'SFUCalled',
-    fromSessionId,
-    sdp,
   }),
 }
 

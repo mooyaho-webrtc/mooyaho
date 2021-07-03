@@ -1,6 +1,12 @@
 import { v4 } from 'uuid'
 import WebSocket from 'ws'
-import { Message, ReceiveAction } from './actions/receive'
+import {
+  AnswerAction,
+  CallAction,
+  CandidateAction,
+  Message,
+  ReceiveAction,
+} from './actions/receive'
 import actionCreators from './actions/send'
 import { createHmac } from 'crypto'
 import { globalSubscriber } from './redis/createRedisClient'
@@ -22,15 +28,16 @@ function startListenSignal() {
       if (signal.type === 'icecandidate') {
         subscription.dispatch(
           prefixer.direct(signal.sessionId),
-          actionCreators.SFUCandidated(
+          actionCreators.candidated(
+            signal.fromSessionId!,
             JSON.parse(signal.candidate),
-            signal.fromSessionId
+            true
           )
         )
       } else if (signal.type === 'offer') {
         subscription.dispatch(
           prefixer.direct(signal.sessionId),
-          actionCreators.SFUCalled(signal.sdp, signal.fromSessionId)
+          actionCreators.called(signal.fromSessionId, signal.sdp, true)
         )
       }
     })
@@ -107,32 +114,28 @@ class Session {
         break
       }
       case 'call': {
-        this.handleCall(action.to, action.description)
+        this.handleCall(action)
         break
       }
       case 'answer': {
-        this.handleAnswer(action.to, action.description)
+        this.handleAnswer(action)
         break
       }
       case 'candidate': {
-        this.handleCandidate(action.to, action.candidate)
+        this.handleCandidate(action)
         break
       }
       case 'integrateUser': {
         this.handleIntegrateUser(action.user)
         break
       }
-      case 'SFUCall': {
-        this.handleSFUCall(action.sdp)
-        break
-      }
-      case 'SFUCandidate': {
-        this.handleSFUCandidate(action.candidate, action.sessionId)
-        break
-      }
-      case 'SFUAnswer': {
-        this.handleSFUAnswer(action.sessionId, action.sdp)
-      }
+      // case 'SFUCandidate': {
+      //   this.handleSFUCandidate(action.candidate, action.sessionId)
+      //   break
+      // }
+      // case 'SFUAnswer': {
+      //   this.handleSFUAnswer(action.sessionId, action.sdp)
+      // }
     }
   }
 
@@ -208,28 +211,69 @@ class Session {
     }
   }
 
-  handleCall(to: string, description: Description) {
-    rtcHelper.call({
-      from: this.id,
-      to,
-      description,
-    })
+  async handleCall(action: CallAction) {
+    if (action.isSFU) {
+      if (!this.currentChannel) return
+      try {
+        const result = await grpcClient.call({
+          channelId: this.currentChannel,
+          sessionId: this.id,
+          sdp: action.sdp,
+        })
+
+        this.sendJSON(actionCreators.answered(undefined, result, true))
+      } catch (e) {
+        console.log(e)
+      }
+    } else {
+      rtcHelper.call({
+        from: this.id,
+        to: action.to,
+        sdp: action.sdp,
+      })
+    }
   }
 
-  handleAnswer(to: string, description: Description) {
-    rtcHelper.answer({
-      from: this.id,
-      to,
-      description,
-    })
+  handleAnswer(action: AnswerAction) {
+    const { isSFU, to, sdp } = action
+    if (isSFU) {
+      if (!this.currentChannel) return
+      grpcClient.answer({
+        channelId: this.currentChannel,
+        fromSessionId: this.id,
+        sdp,
+        sessionId: to,
+      })
+    } else {
+      rtcHelper.answer({
+        from: this.id,
+        to,
+        sdp,
+      })
+    }
   }
 
-  handleCandidate(to: string, candidate: any) {
-    rtcHelper.candidate({
-      from: this.id,
-      to,
-      candidate,
-    })
+  handleCandidate(action: CandidateAction) {
+    const { to, isSFU, candidate } = action
+
+    if (isSFU) {
+      try {
+        // ensures answer first
+        setTimeout(() => {
+          grpcClient.clientIcecandidate({
+            sessionId: to,
+            fromSessionId: this.id,
+            candidate: JSON.stringify(candidate),
+          })
+        }, 50)
+      } catch (e) {}
+    } else {
+      rtcHelper.candidate({
+        from: this.id,
+        to,
+        candidate,
+      })
+    }
   }
 
   async handleIntegrateUser(user: Record<string, any>) {
@@ -240,44 +284,6 @@ class Session {
     }
     await sessionService.integrate(this.id, JSON.stringify(userWithSessionId))
     this.sendJSON(actionCreators.integrated(userWithSessionId))
-  }
-
-  async handleSFUCall(sdp: string) {
-    if (!this.currentChannel) return
-    try {
-      const result = await grpcClient.call({
-        channelId: this.currentChannel,
-        sessionId: this.id,
-        sdp,
-      })
-
-      this.sendJSON(actionCreators.SFUAnswered(result))
-    } catch (e) {
-      console.log(e)
-    }
-  }
-
-  async handleSFUCandidate(candidate: any, sessionId?: string) {
-    try {
-      // ensures answer first
-      setTimeout(() => {
-        grpcClient.clientIcecandidate({
-          sessionId,
-          fromSessionId: this.id,
-          candidate: JSON.stringify(candidate),
-        })
-      }, 50)
-    } catch (e) {}
-  }
-
-  handleSFUAnswer(sessionId: string, sdp: string) {
-    if (!this.currentChannel) return
-    grpcClient.answer({
-      channelId: this.currentChannel,
-      fromSessionId: this.id,
-      sdp,
-      sessionId,
-    })
   }
 
   public sendSubscriptionMessage(key: string, message: any) {

@@ -14,9 +14,10 @@ ws.addEventListener("message", (event) => {
 
 function sendJSON(object) {
   const message = JSON.stringify(object);
-  // console.group("Send");
-  // console.log(JSON.stringify(object, null, 2));
-  // console.groupEnd("Send");
+  console.group("Send");
+  console.log(object.type);
+  console.log(object);
+  console.groupEnd("Send");
   ws.send(message);
 }
 
@@ -30,9 +31,10 @@ const config = {
 function handleMessage(message) {
   try {
     const action = JSON.parse(message);
-    // console.group("Receive");
-    // console.log(JSON.stringify(action, null, 2));
-    // console.groupEnd("Receive");
+    console.group("Receive");
+    console.log(action.type);
+    console.log(action);
+    console.groupEnd("Receive");
     if (!action.type) {
       throw new Error("There is no type in action");
     }
@@ -50,25 +52,16 @@ function handleMessage(message) {
         call(action.sessionId);
         break;
       case "called":
-        answer(action.from, action.description);
+        answer(action.from, action.sdp, action.isSFU);
         break;
       case "answered":
-        answered(action.from, action.description);
+        answered(action.from, action.sdp, action.isSFU);
         break;
       case "candidated":
-        candidated(action.from, action.candidate);
+        candidated(action.from, action.candidate, action.isSFU);
         break;
       case "enterSuccess":
         enterSuccess(action.sfuEnabled);
-        break;
-      case "SFUAnswered":
-        sfuAnswered(action.sdp);
-        break;
-      case "SFUCandidated":
-        sfuCandidated(action.candidate, action.fromSessionId);
-        break;
-      case "SFUCalled":
-        sfuCalled(action.fromSessionId, action.sdp);
         break;
     }
   } catch (e) {
@@ -138,9 +131,46 @@ async function call(to) {
   });
 }
 
-async function answer(to, description) {
-  const stream = await createMediaStream();
+async function answer(to, sdp, isSFU) {
+  if (isSFU) {
+    const localPeer = new RTCPeerConnection(rtcConfiguration);
 
+    localPeers[to] = localPeer;
+
+    localPeer.addEventListener("icecandidate", (e) => {
+      sfuCandidate(e.candidate, to);
+    });
+    localPeer.addEventListener("connectionstatechange", (e) => {
+      if (sfuPeer.connectionState === "connected") {
+      }
+    });
+
+    const video = document.createElement("video");
+    document.body.appendChild(video);
+    video.autoplay = true;
+
+    localPeer.addEventListener("track", (ev) => {
+      console.log("track", ev.streams);
+      if (video.srcObject !== ev.streams[0]) {
+        video.srcObject = ev.streams[0];
+      }
+    });
+
+    await localPeer.setRemoteDescription({ type: "offer", sdp });
+
+    const answer = await localPeer.createAnswer();
+    await localPeer.setLocalDescription(answer);
+
+    sendJSON({
+      type: "answer",
+      to,
+      sdp: answer.sdp,
+      isSFU: true,
+    });
+    return;
+  }
+
+  const stream = localStream;
   const localPeer = new RTCPeerConnection(rtcConfiguration);
   localPeers[to] = localPeer;
 
@@ -162,26 +192,51 @@ async function answer(to, description) {
     localPeer.addTrack(track, stream);
   });
 
-  await localPeer.setRemoteDescription(description);
+  await localPeer.setRemoteDescription({
+    type: "offer",
+    sdp,
+  });
   const answer = await localPeer.createAnswer();
   await localPeer.setLocalDescription(answer);
 
   sendJSON({
     type: "answer",
     to,
-    description: answer,
+    sdp: answer.sdp,
   });
 }
 
-async function answered(from, description) {
+async function answered(from, sdp, isSFU) {
+  if (isSFU) {
+    if (!sfuPeerConnection) {
+      console.error("sfuPeer does not exist");
+      return;
+    }
+
+    console.log({
+      type: "answer",
+      sdp,
+    });
+    await sfuPeerConnection.setRemoteDescription(
+      new RTCSessionDescription({
+        type: "answer",
+        sdp,
+      })
+    );
+    return;
+  }
+
   const localPeer = localPeers[from];
   if (!localPeer) {
     console.error(`localPeer ${from} does not exist`);
     return;
   }
-  await localPeer.setRemoteDescription(description);
+  await localPeer.setRemoteDescription({
+    type: "answer",
+    sdp,
+  });
+  console.log(`setRemoteDescription success for ${from}`);
 }
-
 function icecandidate(to, candidate) {
   sendJSON({
     type: "candidate",
@@ -190,7 +245,20 @@ function icecandidate(to, candidate) {
   });
 }
 
-function candidated(from, candidate) {
+function candidated(from, candidate, isSFU) {
+  if (isSFU) {
+    if (!from) {
+      sfuPeerConnection.addIceCandidate(candidate);
+    } else {
+      const localPeer = localPeers[from];
+      if (!localPeer) {
+        console.error("localPeer not found");
+        return;
+      }
+      localPeer.addIceCandidate(candidate);
+    }
+    return;
+  }
   const localPeer = localPeers[from];
   if (!localPeer) {
     console.error(`localPeer ${from} does not exist`);
@@ -199,11 +267,11 @@ function candidated(from, candidate) {
 
   try {
     localPeer.addIceCandidate(candidate);
+    console.log(`Candidate from ${from} success!`);
   } catch (e) {
     console.error(`Failed to candidate: ${e.toString()}`);
   }
 }
-
 channelForm.addEventListener("submit", async (e) => {
   channelForm.querySelector("button").disabled = true;
   e.preventDefault();
@@ -246,7 +314,9 @@ async function sfuCall() {
   sfuPeer.addEventListener("icecandidate", (e) => {
     sfuCandidate(e.candidate);
   });
-  sfuPeer.addEventListener("connectionstatechange", (e) => {});
+  sfuPeer.addEventListener("connectionstatechange", (e) => {
+    console.log(sfuPeer.connectionState);
+  });
   window.sfuPeer = sfuPeer;
 
   localStream.getTracks().forEach((track) => {
@@ -257,86 +327,24 @@ async function sfuCall() {
   sfuPeer.setLocalDescription(offer);
 
   sendJSON({
-    type: "SFUCall",
+    type: "call",
     sdp: offer.sdp,
+    isSFU: true,
   });
-}
-
-async function sfuAnswered(sdp) {
-  if (!sfuPeerConnection) {
-    console.error("sfuPeer does not exist");
-    return;
-  }
-  await sfuPeerConnection.setRemoteDescription(
-    new RTCSessionDescription({
-      type: "answer",
-      sdp,
-    })
-  );
-
-  console.log("processed answer");
 }
 
 function sfuCandidate(candidate, sessionId) {
   sendJSON({
-    type: "SFUCandidate",
+    type: "candidate",
     candidate,
-    sessionId,
+    to: sessionId,
+    isSFU: true,
   });
-}
-
-function sfuCandidated(candidate, fromSessionId) {
-  if (!fromSessionId) {
-    sfuPeerConnection.addIceCandidate(candidate);
-  } else {
-    const localPeer = localPeers[fromSessionId];
-    if (!localPeer) {
-      console.error("localPeer not found");
-      return;
-    }
-    localPeer.addIceCandidate(candidate);
-  }
 }
 
 window.enterSuccess = enterSuccess;
 
 window.integrateUser = integrateUser;
-
-async function sfuCalled(fromSessionId, sdp) {
-  const localPeer = new RTCPeerConnection(rtcConfiguration);
-
-  localPeers[fromSessionId] = localPeer;
-
-  localPeer.addEventListener("icecandidate", (e) => {
-    sfuCandidate(e.candidate, fromSessionId);
-  });
-  localPeer.addEventListener("connectionstatechange", (e) => {
-    if (sfuPeer.connectionState === "connected") {
-    }
-  });
-
-  const video = document.createElement("video");
-  document.body.appendChild(video);
-  video.autoplay = true;
-
-  localPeer.addEventListener("track", (ev) => {
-    console.log("track", ev.streams);
-    if (video.srcObject !== ev.streams[0]) {
-      video.srcObject = ev.streams[0];
-    }
-  });
-
-  await localPeer.setRemoteDescription({ type: "offer", sdp });
-
-  const answer = await localPeer.createAnswer();
-  await localPeer.setLocalDescription(answer);
-
-  sendJSON({
-    type: "SFUAnswer",
-    sessionId: fromSessionId,
-    sdp: answer.sdp,
-  });
-}
 
 function disconnect() {
   sfuPeerConnection.close();
