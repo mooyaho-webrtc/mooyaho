@@ -42,7 +42,10 @@ const sessionService = {
       })
     }
 
-    return { session, user: parsed }
+    return {
+      sessionId: session.id,
+      user: parsed,
+    }
   },
   async getUserBySessionId(sessionId: string) {
     const session = await prisma.session.findUnique({

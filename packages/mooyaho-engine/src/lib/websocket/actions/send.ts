@@ -87,6 +87,10 @@ type IntegratedUserAction = {
   }
 }
 
+type ChannelClosedAction = {
+  type: 'channelClosed'
+}
+
 export type SendAction =
   | ConnectedAction
   | ReuseIdSuccessAction
@@ -101,6 +105,7 @@ export type SendAction =
   | CandidatedAction
   | IntegratedUserAction
   | EnterSuccessAction
+  | ChannelClosedAction
 
 const actionCreators = {
   connected: (id: string, token: string): ConnectedAction => ({
@@ -181,6 +186,9 @@ const actionCreators = {
   enterSuccess: (sfuEnabled: boolean): EnterSuccessAction => ({
     type: 'enterSuccess',
     sfuEnabled,
+  }),
+  channelClosed: (): ChannelClosedAction => ({
+    type: 'channelClosed',
   }),
 }
 

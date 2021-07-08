@@ -1,0 +1,11 @@
+{
+  "title": "Remove Channel Params",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Channel ID"
+    }
+  },
+  "required": ["id"]
+}

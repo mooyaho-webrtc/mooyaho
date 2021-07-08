@@ -5,8 +5,7 @@
      "lib": [
         "es5",
         "es6",
-        "esnext",
-        "DOM"
+        "esnext"
      ],
      "target": "es2020",
      "module": "commonjs",

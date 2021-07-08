@@ -24,6 +24,9 @@ const channelHelper = {
       actionCreators.messaged(sessionId, message)
     )
   },
+  close(channel: string) {
+    publishJSON(prefixer.channel(channel), actionCreators.channelClosed())
+  },
 }
 
 export default channelHelper

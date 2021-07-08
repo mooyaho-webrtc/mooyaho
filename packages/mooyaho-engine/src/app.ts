@@ -3,6 +3,7 @@ import { join } from 'path'
 import AutoLoad, { AutoloadPluginOptions } from 'fastify-autoload'
 import { FastifyPluginAsync } from 'fastify'
 import { PrismaClient } from '@prisma/client'
+import { isMooyahoError } from './lib/MooyahoError'
 
 const prisma = new PrismaClient()
 
@@ -32,7 +33,12 @@ const app: FastifyPluginAsync<AppOptions> = async (
   opts
 ): Promise<void> => {
   // Place here your custom code!
-
+  fastify.setErrorHandler((error, request, reply) => {
+    // if (isMooyahoError(error)) {
+    //   reply.status(error.statusCode)
+    // }
+    reply.send(error)
+  })
   // Do not touch the following lines
 
   // This loads all plugins defined in plugins
