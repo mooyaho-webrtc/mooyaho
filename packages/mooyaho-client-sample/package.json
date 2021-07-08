@@ -1,0 +1,13 @@
+{
+  "name": "mooyaho-client-sample-parcel",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "parcel": "^2.0.0-beta.2"
+  },
+  "scripts": {
+    "start": "parcel ./*.html"
+  },
+  "dependencies": {}
+}

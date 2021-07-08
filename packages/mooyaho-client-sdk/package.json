@@ -1,0 +1,12 @@
+{
+  "name": "mooyaho-client-sdk",
+  "version": "1.0.0",
+  "main": "dist/cjs/bundle.js",
+  "module": "dist/es/bundle.js",
+  "types": "dist/types/index.d.ts",
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^8.2.1",
+    "typescript": "^4.3.5"
+  }
+}
