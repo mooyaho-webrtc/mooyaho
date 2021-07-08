@@ -1,5 +1,5 @@
-import Mooyaho from 'mooyaho-client-sdk'
+import Mooyaho, { MooyahoConfig } from 'mooyaho-client-sdk'
 
-const mooyaho = new Mooyaho()
-
-console.log(mooyaho)
+const config: MooyahoConfig = {
+  url: 'ws://localhost:8081/',
+}
