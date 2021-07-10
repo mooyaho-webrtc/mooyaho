@@ -5,6 +5,7 @@ declare global {
       PORT?: string
       SESSION_SECRET_KEY?: string
       API_KEY?: string
+      CORS: 'true' | 'false'
     }
   }
 }

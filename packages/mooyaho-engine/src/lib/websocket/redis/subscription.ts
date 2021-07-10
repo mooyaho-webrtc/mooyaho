@@ -1,13 +1,27 @@
 import Session from '../Session'
 import { globalSubscriber } from './createRedisClient'
+import { promisify } from 'util'
 
 class Subscription {
   subscriptionMap = new Map<string, Set<Session>>()
 
-  subscribe(key: string, session: Session) {
+  async subscribe(key: string, session: Session) {
     const registered = this.subscriptionMap.has(key)
     if (!registered) {
-      globalSubscriber.subscribe(key)
+      try {
+        await new Promise<string>((resolve, reject) =>
+          globalSubscriber.subscribe(key, (e, reply) => {
+            if (e) {
+              reject(e)
+              return
+            }
+            resolve(reply)
+          })
+        )
+      } catch (e) {
+        console.error(`Failed to subscribe to ${key}`)
+      }
+
       this.subscriptionMap.set(key, new Set())
     }
     const sessionSet = this.subscriptionMap.get(key)! // guaranteed to be valid

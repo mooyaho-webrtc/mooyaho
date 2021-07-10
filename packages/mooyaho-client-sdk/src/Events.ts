@@ -1,5 +1,7 @@
 export interface EventMap {
   connected: { sessionId: string }
-  entered: { sessionId: string; self: boolean; sfuEnabled: boolean }
+  enterSuccess: { sfuEnabled: boolean }
+  entered: { sessionId: string; user: any; isSelf: boolean }
+  left: { sessionId }
 }
 export type EventType = keyof EventMap

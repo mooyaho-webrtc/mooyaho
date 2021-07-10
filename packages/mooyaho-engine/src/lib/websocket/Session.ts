@@ -139,8 +139,8 @@ class Session {
     }
   }
 
-  subscribe(key: string) {
-    const unsubscribe = subscription.subscribe(key, this)
+  async subscribe(key: string) {
+    const unsubscribe = await subscription.subscribe(key, this)
     this.unsubscriptionMap.set(key, unsubscribe)
   }
 
@@ -178,7 +178,7 @@ class Session {
       return
     }
 
-    this.subscribe(prefixer.channel(channelId))
+    await this.subscribe(prefixer.channel(channelId))
     if (channel.sfuServerId) {
       this.connectedToSFU = true
     }

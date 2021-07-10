@@ -4,7 +4,8 @@ import { Channel, ChannelSession, ChannelWithSessions } from './types'
 const apiClient = axios.create()
 
 class Mooyaho {
-  constructor(apiKey: string) {
+  constructor(baseUrl: string, apiKey: string) {
+    apiClient.defaults.baseURL = baseUrl
     apiClient.defaults.headers['Authorization'] = `Bearer ${apiKey}`
   }
 
