@@ -39,6 +39,22 @@ const config: MooyahoConfig = {
 
 const mooyaho = new Mooyaho(config)
 
+mooyaho
+  .createUserMedia({
+    audio: true,
+    video: true,
+  })
+  .then(stream => {
+    // add video tag to body and set stream
+    const video = document.createElement('video')
+    video.width = 200
+    video.height = 200
+    video.muted = true
+    video.autoplay = true
+    video.srcObject = stream
+    document.getElementById('me').appendChild(video)
+  })
+
 mooyaho.addEventListener('connected', e => {
   console.log('Successfully connected to Mooyaho Server')
   console.log(`Session ID: ${e.sessionId}`)
@@ -66,6 +82,35 @@ mooyaho.addEventListener('left', e => {
   console.group('User Left')
   console.log(e.sessionId)
   console.groupEnd()
+
+  // find video tag by sessionId and remove it
+  const video = document.getElementById(e.sessionId)
+  if (video) {
+    video.parentNode.removeChild(video)
+  }
+})
+
+mooyaho.addEventListener('remoteStreamChanged', e => {
+  // get stream by e.sessionId
+  const stream = mooyaho.getRemoteStreamById(e.sessionId)
+
+  const existingVideo = document.getElementById(e.sessionId) as
+    | HTMLVideoElement
+    | undefined
+
+  if (existingVideo) {
+    existingVideo.srcObject = stream
+    return
+  }
+
+  const video = document.createElement('video')
+  video.width = 200
+  video.height = 200
+  video.muted = true
+  video.autoplay = true
+  video.srcObject = stream
+  video.id = e.sessionId
+  document.getElementById('others').appendChild(video)
 })
 
 mooyaho.connect()

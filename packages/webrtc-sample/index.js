@@ -92,6 +92,7 @@ async function call(to) {
   localPeers[to] = localPeer;
 
   localPeer.addEventListener("icecandidate", (e) => {
+    console.log("hello");
     icecandidate(to, e.candidate);
   });
 
@@ -128,6 +129,7 @@ async function answer(to, sdp) {
   localPeers[to] = localPeer;
 
   localPeer.addEventListener("icecandidate", (e) => {
+    console.log("bye");
     icecandidate(to, e.candidate);
   });
 

@@ -4,17 +4,38 @@ import { SendAction as ServerSentAction } from 'mooyaho-engine/src/lib/websocket
 import { ReceiveAction } from '../../mooyaho-engine/src/lib/websocket/actions/receive'
 import { waitUntil } from './utils/waitUntil'
 
+const rtcConfiguration = {}
+
 class Mooyaho {
   socket: WebSocket | null = null
   sessionId: string | null = null
   sfuEnabled = false
   channelId: string = ''
+  peers = new Map<string, RTCPeerConnection>()
+  private myStream: MediaStream | null = null
+  private remoteStreams = new Map<string, MediaStream>()
 
   private events = new EventEmitter()
-
   private connected = false
 
   constructor(private config: MooyahoConfig) {}
+
+  public getMyStream() {
+    return this.myStream
+  }
+
+  public getRemoteStreamById(sessionId: string) {
+    return this.remoteStreams.get(sessionId)
+  }
+
+  async createUserMedia(constraints: MediaStreamConstraints) {
+    if (this.myStream) {
+      return Promise.resolve(this.myStream)
+    }
+    const stream = await navigator.mediaDevices.getUserMedia(constraints)
+    this.myStream = stream
+    return stream
+  }
 
   private handleSocketAction(action: ServerSentAction) {
     switch (action.type) {
@@ -29,6 +50,18 @@ class Mooyaho {
         break
       case 'left':
         this.handleLeft(action.sessionId)
+        break
+      case 'called':
+        this.handleCalled(action.from, action.sdp)
+        break
+      case 'answered':
+        // call handleAnswered when isSFU is false
+        if (!action.isSFU) {
+          this.handleAnswered(action.from, action.sdp)
+        }
+        break
+      case 'candidated':
+        this.handleCandidated(action.from, action.candidate)
         break
       default:
         console.log('Unhandled action: ', action)
@@ -48,6 +81,11 @@ class Mooyaho {
   }
 
   private handleEntered(sessionId: string, user: any) {
+    // call if it is not self
+    if (sessionId !== this.sessionId) {
+      this.call(sessionId)
+    }
+
     this.emit('entered', {
       sessionId,
       user,
@@ -59,15 +97,129 @@ class Mooyaho {
     this.emit('left', {
       sessionId,
     })
+
+    // get peer connection by session id
+    // and disconnect peer
+    // remove from peers
+    const peer = this.peers.get(sessionId)
+    if (peer) {
+      peer.close()
+      this.peers.delete(sessionId)
+    }
+  }
+
+  private handleCalled(sessionId: string, sdp: string) {
+    this.answer(sessionId, sdp)
+  }
+
+  // find peer by from
+  // print error if peer does not exist and return
+  // set remote description to peer
+  // and print that setting remote description has succeeded
+  private handleAnswered(from: string, sdp: string) {
+    const peer = this.peers.get(from)
+    if (!peer) {
+      console.error('Peer does not exist')
+      return
+    }
+    peer.setRemoteDescription({ type: 'answer', sdp })
+    console.log('Setting remote description succeeded')
+  }
+
+  private handleCandidated(from: string, candidate: any) {
+    const peer = this.peers.get(from)
+    if (!peer) {
+      console.error('Peer does not exist')
+      return
+    }
+    peer.addIceCandidate(candidate)
   }
 
   private send(action: ReceiveAction) {
-    console.log(action, this.socket)
     if (!this.socket) return
     this.socket.send(JSON.stringify(action))
   }
 
-  emit<K extends EventType>(type: K, event: EventMap[K]) {
+  private async call(sessionId: string) {
+    const peer = new RTCPeerConnection(rtcConfiguration)
+    this.peers.set(sessionId, peer)
+
+    peer.addEventListener('icecandidate', event => {
+      console.log('hello')
+      this.icecandidate(sessionId, event.candidate)
+    })
+    peer.addEventListener('connectionstatechange', event => {
+      console.log(peer.connectionState)
+    })
+    peer.addEventListener('track', event => {
+      this.remoteStreams.set(sessionId, event.streams[0])
+      this.emit('remoteStreamChanged', { sessionId })
+    })
+
+    // put tracks of myStream into peer
+    if (this.myStream) {
+      const tracks = this.myStream.getTracks()
+      for (const track of tracks) {
+        peer.addTrack(track, this.myStream)
+      }
+    }
+
+    // create offer and send it using this.send
+    const offer = await peer.createOffer()
+
+    // set local description
+    peer.setLocalDescription(offer)
+
+    this.send({
+      type: 'call',
+      to: sessionId,
+      sdp: offer.sdp!,
+    })
+  }
+
+  private async answer(sessionId: string, sdp: string) {
+    // create peer and store to peers
+    const peer = new RTCPeerConnection(rtcConfiguration)
+    this.peers.set(sessionId, peer)
+
+    // store stream to remoteStreams when track changes
+    peer.addEventListener('track', event => {
+      this.remoteStreams.set(sessionId, event.streams[0])
+      this.emit('remoteStreamChanged', { sessionId })
+    })
+
+    // do icecandidate
+    peer.addEventListener('icecandidate', event => {
+      console.log('world')
+      this.icecandidate(sessionId, event.candidate)
+    })
+
+    // put tracks of myStream into peer
+    if (this.myStream) {
+      const tracks = this.myStream.getTracks()
+      for (const track of tracks) {
+        peer.addTrack(track, this.myStream)
+      }
+    }
+
+    // set remote description
+    peer.setRemoteDescription({ type: 'offer', sdp })
+
+    // create answer and send it using this.send
+    const answer = await peer.createAnswer()
+
+    // set local description
+    peer.setLocalDescription(answer)
+
+    // send answer
+    this.send({
+      type: 'answer',
+      to: sessionId,
+      sdp: answer.sdp!,
+    })
+  }
+
+  private emit<K extends EventType>(type: K, event: EventMap[K]) {
     this.events.emit(type, event)
   }
 
@@ -117,6 +269,14 @@ class Mooyaho {
     this.send({
       type: 'integrateUser',
       user,
+    })
+  }
+
+  icecandidate(to: string, candidate: any) {
+    this.send({
+      type: 'candidate',
+      to,
+      candidate,
     })
   }
 

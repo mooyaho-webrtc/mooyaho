@@ -65,12 +65,18 @@ type CalledAction = {
   isSFU?: boolean
 }
 
-type AnsweredAction = {
-  type: 'answered'
-  from?: string
-  sdp: string
-  isSFU?: boolean
-}
+type AnsweredAction =
+  | {
+      type: 'answered'
+      isSFU: false
+      from: string
+      sdp: string
+    }
+  | {
+      type: 'answered'
+      isSFU: true
+      sdp: string
+    }
 
 type CandidatedAction = {
   type: 'candidated'
@@ -160,12 +166,21 @@ const actionCreators = {
     from: string | undefined,
     sdp: string,
     isSFU?: boolean
-  ): AnsweredAction => ({
-    type: 'answered',
-    from,
-    sdp,
-    isSFU,
-  }),
+  ): AnsweredAction => {
+    if (isSFU) {
+      return {
+        type: 'answered',
+        isSFU,
+        sdp,
+      }
+    }
+    return {
+      type: 'answered',
+      isSFU: false,
+      from: from!,
+      sdp,
+    }
+  },
   candidated: (
     from: string,
     candidate: any,
