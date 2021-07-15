@@ -5,4 +5,12 @@ export interface EventMap {
   left: { sessionId: string }
   remoteStreamChanged: { sessionId: string }
 }
+
 export type EventType = keyof EventMap
+
+export interface LocalEventMap {
+  listSessions: {
+    sessions: { id: string; user: any }[]
+  }
+}
+export type LocalEventType = keyof LocalEventMap

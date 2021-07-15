@@ -1,5 +1,5 @@
 import EventEmitter from 'eventemitter3'
-import { EventMap, EventType } from './Events'
+import { EventMap, EventType, LocalEventMap, LocalEventType } from './Events'
 import { SendAction as ServerSentAction } from 'mooyaho-engine/src/lib/websocket/actions/send'
 import { ReceiveAction } from '../../mooyaho-engine/src/lib/websocket/actions/receive'
 import { waitUntil } from './utils/waitUntil'
@@ -16,6 +16,8 @@ class Mooyaho {
   private remoteStreams = new Map<string, MediaStream>()
 
   private events = new EventEmitter()
+  private localEvents = new EventEmitter<LocalEventMap>()
+
   private connected = false
 
   constructor(private config: MooyahoConfig) {}
@@ -62,6 +64,9 @@ class Mooyaho {
         break
       case 'candidated':
         this.handleCandidated(action.from, action.candidate)
+        break
+      case 'listSessionsSuccess':
+        this.handleListSessionsSuccess(action.sessions)
         break
       default:
         console.log('Unhandled action: ', action)
@@ -133,6 +138,10 @@ class Mooyaho {
       return
     }
     peer.addIceCandidate(candidate)
+  }
+
+  private handleListSessionsSuccess(sessions: { id: string; user: any }[]) {
+    this.localEvents.emit('listSessions', { sessions })
   }
 
   private send(action: ReceiveAction) {
@@ -283,6 +292,20 @@ class Mooyaho {
   leave() {
     this.send({
       type: 'leave',
+    })
+  }
+
+  listSessions() {
+    this.send({
+      type: 'listSessions',
+    })
+    return new Promise<LocalEventMap['listSessions']>(resolve => {
+      this.localEvents.once(
+        'listSessions',
+        (e: LocalEventMap['listSessions']) => {
+          resolve(e)
+        }
+      )
     })
   }
 

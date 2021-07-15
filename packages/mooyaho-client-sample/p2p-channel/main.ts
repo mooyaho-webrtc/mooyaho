@@ -70,6 +70,7 @@ mooyaho.addEventListener('enterSuccess', e => {
   console.log(`Successfully entered to channel ${mooyaho.channelId}`)
   console.log(`SFU is ${e.sfuEnabled ? 'enabled' : 'disabled'} in this channel`)
   leaveButton.style.display = 'block'
+  mooyaho.listSessions().then(console.log)
 })
 
 mooyaho.addEventListener('entered', e => {
