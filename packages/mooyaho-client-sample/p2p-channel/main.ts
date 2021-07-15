@@ -17,6 +17,7 @@ const channelIdInput = document.getElementById(
 ) as HTMLInputElement
 const usernameInput = document.getElementById('username') as HTMLInputElement
 const leaveButton = document.getElementById('leave')
+const othersDiv = document.getElementById('others')
 
 // setup ui
 createButton.addEventListener('click', async () => {
@@ -70,13 +71,35 @@ mooyaho.addEventListener('enterSuccess', e => {
   console.log(`Successfully entered to channel ${mooyaho.channelId}`)
   console.log(`SFU is ${e.sfuEnabled ? 'enabled' : 'disabled'} in this channel`)
   leaveButton.style.display = 'block'
-  mooyaho.listSessions().then(console.log)
+
+  const sessionArray = mooyaho.sessionsArray
+
+  sessionArray.forEach(session => {
+    if (session.id === mooyaho.sessionId) return
+    const sessionDiv = createSessionDiv(session.id, session.user.username)
+    othersDiv.appendChild(sessionDiv)
+  })
 })
+
+function createSessionDiv(sessionId: string, username: string) {
+  const sessionDiv = document.createElement('div')
+  sessionDiv.id = sessionId
+  sessionDiv.innerHTML = `
+    <video width="200" height="200" autoplay></video>
+    <div class="session-id">${sessionId}</div>
+    <div class="username">${username}</div>
+  `
+  return sessionDiv
+}
 
 mooyaho.addEventListener('entered', e => {
   console.group('User Entered')
   console.log(e)
   console.groupEnd()
+
+  if (e.isSelf) return
+  const sessionDiv = createSessionDiv(e.sessionId, e.user.username)
+  othersDiv.appendChild(sessionDiv)
 })
 
 mooyaho.addEventListener('left', e => {
@@ -92,26 +115,17 @@ mooyaho.addEventListener('left', e => {
 })
 
 mooyaho.addEventListener('remoteStreamChanged', e => {
-  // get stream by e.sessionId
+  // select div by e.sessionId
+  const sessionDiv = document.getElementById(e.sessionId)
+  if (!sessionDiv) return
+
   const stream = mooyaho.getRemoteStreamById(e.sessionId)
 
-  const existingVideo = document.getElementById(e.sessionId) as
-    | HTMLVideoElement
-    | undefined
-
-  if (existingVideo) {
-    existingVideo.srcObject = stream
-    return
-  }
-
-  const video = document.createElement('video')
-  video.width = 200
-  video.height = 200
-  video.muted = true
-  video.autoplay = true
+  const video = sessionDiv.querySelector('video')
   video.srcObject = stream
-  video.id = e.sessionId
-  document.getElementById('others').appendChild(video)
 })
 
 mooyaho.connect()
+
+// for debug purpose
+;(window as any).mooyaho = mooyaho

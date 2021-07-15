@@ -11,3 +11,15 @@
   display: none;
   margin-top: 1rem;
 }
+
+#others {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.session-id {
+  font-size: 0.75rem;
+}
+.username {
+  font-size: 1rem;
+}

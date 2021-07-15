@@ -17,6 +17,11 @@ class Mooyaho {
 
   private events = new EventEmitter()
   private localEvents = new EventEmitter<LocalEventMap>()
+  sessions: Map<string, { id: string; user: any }> = new Map()
+
+  get sessionsArray() {
+    return Array.from(this.sessions.values())
+  }
 
   private connected = false
 
@@ -80,8 +85,16 @@ class Mooyaho {
     this.emit('connected', { sessionId })
   }
 
-  private handleEnterSuccess(sfuEnabled: boolean) {
+  private async handleEnterSuccess(sfuEnabled: boolean) {
     this.sfuEnabled = sfuEnabled
+
+    const result = await this.getSessions()
+
+    // store sessions to sessions map
+    result.sessions.forEach(session => {
+      this.sessions.set(session.id, session)
+    })
+
     this.emit('enterSuccess', { sfuEnabled })
   }
 
@@ -89,6 +102,8 @@ class Mooyaho {
     // call if it is not self
     if (sessionId !== this.sessionId) {
       this.call(sessionId)
+      // put user in sessions with session id as key
+      this.sessions.set(sessionId, { id: sessionId, user })
     }
 
     this.emit('entered', {
@@ -111,6 +126,9 @@ class Mooyaho {
       peer.close()
       this.peers.delete(sessionId)
     }
+
+    // remove from sessions
+    this.sessions.delete(sessionId)
   }
 
   private handleCalled(sessionId: string, sdp: string) {
@@ -295,7 +313,7 @@ class Mooyaho {
     })
   }
 
-  listSessions() {
+  getSessions() {
     this.send({
       type: 'listSessions',
     })
