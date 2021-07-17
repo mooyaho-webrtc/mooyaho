@@ -5,67 +5,67 @@
 import { SessionUser } from '../../../services/sessionService'
 import { Message } from './receive'
 
-type ConnectedAction = {
+export type ConnectedAction = {
   type: 'connected'
   id: string
   token: string
 }
 
-type GetIdSuccessAction = {
+export type GetIdSuccessAction = {
   type: 'getIdSuccess'
   id: string
 }
 
-type ReuseIdSuccessAction = {
+export type ReuseIdSuccessAction = {
   type: 'reuseIdSuccess'
 }
 
-type SubscriptionMessageAction = {
+export type SubscriptionMessageAction = {
   type: 'subscriptionMessage'
   key: string
   message: any
 }
 
-type SubscriptionSuccess = {
+export type SubscriptionSuccess = {
   type: 'subscriptionSuccess'
   key: string
 }
 
-type ListSessionsSuccess = {
+export type ListSessionsSuccess = {
   type: 'listSessionsSuccess'
   sessions: { id: string; user: any }[]
 }
 
-type EnterSuccessAction = {
+export type EnterSuccessAction = {
   type: 'enterSuccess'
   sfuEnabled: boolean
 }
 
-type EnteredAction = {
+export type EnteredAction = {
   type: 'entered'
   sessionId: string
   user: SessionUser
 }
 
-type LeftAction = {
+export type LeftAction = {
   type: 'left'
   sessionId: string
 }
 
-type MessagedAction = {
+export type MessagedAction = {
   type: 'messaged'
   sessionId: string
   message: Message
 }
 
-type CalledAction = {
+export type CalledAction = {
   type: 'called'
   from: string
   sdp: string
   isSFU?: boolean
 }
 
-type AnsweredAction =
+export type AnsweredAction =
   | {
       type: 'answered'
       isSFU: false
@@ -78,14 +78,21 @@ type AnsweredAction =
       sdp: string
     }
 
-type CandidatedAction = {
-  type: 'candidated'
-  from: string
-  candidate: any
-  isSFU?: boolean
-}
+export type CandidatedAction =
+  | {
+      type: 'candidated'
+      from: string
+      candidate: any
+      isSFU: false
+    }
+  | {
+      type: 'candidated'
+      from?: string
+      candidate: any
+      isSFU: true
+    }
 
-type IntegratedUserAction = {
+export type IntegratedUserAction = {
   type: 'integrated'
   user: {
     id: string
@@ -93,7 +100,7 @@ type IntegratedUserAction = {
   }
 }
 
-type ChannelClosedAction = {
+export type ChannelClosedAction = {
   type: 'channelClosed'
 }
 
@@ -182,15 +189,14 @@ const actionCreators = {
     }
   },
   candidated: (
-    from: string,
+    from: string | undefined,
     candidate: any,
-    isSFU?: boolean
-  ): CandidatedAction => ({
-    type: 'candidated',
-    from,
-    candidate,
-    isSFU,
-  }),
+    isSFU: boolean = false
+  ): CandidatedAction => {
+    return isSFU
+      ? { type: 'candidated', from: from, candidate, isSFU: true }
+      : { type: 'candidated', from: from!, candidate, isSFU: false }
+  },
   integrated: (user: {
     id: string
     [key: string]: any

@@ -270,7 +270,7 @@ class Session {
     } else {
       rtcHelper.candidate({
         from: this.id,
-        to,
+        to: to!,
         candidate,
       })
     }

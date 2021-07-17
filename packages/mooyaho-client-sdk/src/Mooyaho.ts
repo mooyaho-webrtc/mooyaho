@@ -1,6 +1,9 @@
 import EventEmitter from 'eventemitter3'
 import { EventMap, EventType, LocalEventMap, LocalEventType } from './Events'
-import { SendAction as ServerSentAction } from 'mooyaho-engine/src/lib/websocket/actions/send'
+import {
+  CandidatedAction,
+  SendAction as ServerSentAction,
+} from 'mooyaho-engine/src/lib/websocket/actions/send'
 import { ReceiveAction } from '../../mooyaho-engine/src/lib/websocket/actions/receive'
 import { waitUntil } from './utils/waitUntil'
 
@@ -14,6 +17,9 @@ class Mooyaho {
   peers = new Map<string, RTCPeerConnection>()
   private myStream: MediaStream | null = null
   private remoteStreams = new Map<string, MediaStream>()
+
+  // peer connection for sending current users stream to SFU
+  private sfuLocalPeer: RTCPeerConnection | null = null
 
   private events = new EventEmitter()
   private localEvents = new EventEmitter<LocalEventMap>()
@@ -59,16 +65,14 @@ class Mooyaho {
         this.handleLeft(action.sessionId)
         break
       case 'called':
-        this.handleCalled(action.from, action.sdp)
+        this.handleCalled(action.from, action.sdp, action.isSFU)
         break
       case 'answered':
         // call handleAnswered when isSFU is false
-        if (!action.isSFU) {
-          this.handleAnswered(action.from, action.sdp)
-        }
+        this.handleAnswered(action)
         break
       case 'candidated':
-        this.handleCandidated(action.from, action.candidate)
+        this.handleCandidated(action)
         break
       case 'listSessionsSuccess':
         this.handleListSessionsSuccess(action.sessions)
@@ -94,6 +98,10 @@ class Mooyaho {
     result.sessions.forEach(session => {
       this.sessions.set(session.id, session)
     })
+
+    if (sfuEnabled) {
+      this.sfuCall()
+    }
 
     this.emit('enterSuccess', { sfuEnabled })
   }
@@ -131,31 +139,62 @@ class Mooyaho {
     this.sessions.delete(sessionId)
   }
 
-  private handleCalled(sessionId: string, sdp: string) {
-    this.answer(sessionId, sdp)
+  private handleCalled(sessionId: string, sdp: string, isSFU?: boolean) {
+    if (isSFU) {
+      this.sfuAnswer(sessionId, sdp)
+    } else {
+      this.answer(sessionId, sdp)
+    }
   }
 
   // find peer by from
   // print error if peer does not exist and return
   // set remote description to peer
   // and print that setting remote description has succeeded
-  private handleAnswered(from: string, sdp: string) {
-    const peer = this.peers.get(from)
-    if (!peer) {
-      console.error('Peer does not exist')
-      return
+  private handleAnswered(
+    params:
+      | {
+          from: string
+          sdp: string
+          isSFU: false
+        }
+      | {
+          sdp: string
+          isSFU: true
+        }
+  ) {
+    if (!params.isSFU) {
+      const peer = this.peers.get(params.from)
+      if (!peer) {
+        console.error('Peer does not exist')
+        return
+      }
+      peer.setRemoteDescription({ type: 'answer', sdp: params.sdp })
+      console.log('Setting remote description succeeded')
+    } else {
+      if (!this.sfuLocalPeer) {
+        console.error('sfuLocalPeer does not exist')
+        return
+      }
+      this.sfuLocalPeer.setRemoteDescription({
+        type: 'answer',
+        sdp: params.sdp,
+      })
     }
-    peer.setRemoteDescription({ type: 'answer', sdp })
-    console.log('Setting remote description succeeded')
   }
 
-  private handleCandidated(from: string, candidate: any) {
-    const peer = this.peers.get(from)
+  private handleCandidated(action: CandidatedAction) {
+    if (action.isSFU && !action.from) {
+      this.sfuLocalPeer?.addIceCandidate(action.candidate)
+      return
+    }
+
+    const peer = this.peers.get(action.from!)
     if (!peer) {
       console.error('Peer does not exist')
       return
     }
-    peer.addIceCandidate(candidate)
+    peer.addIceCandidate(action.candidate)
   }
 
   private handleListSessionsSuccess(sessions: { id: string; user: any }[]) {
@@ -172,7 +211,6 @@ class Mooyaho {
     this.peers.set(sessionId, peer)
 
     peer.addEventListener('icecandidate', event => {
-      console.log('hello')
       this.icecandidate(sessionId, event.candidate)
     })
     peer.addEventListener('connectionstatechange', event => {
@@ -217,7 +255,6 @@ class Mooyaho {
 
     // do icecandidate
     peer.addEventListener('icecandidate', event => {
-      console.log('world')
       this.icecandidate(sessionId, event.candidate)
     })
 
@@ -243,6 +280,68 @@ class Mooyaho {
       type: 'answer',
       to: sessionId,
       sdp: answer.sdp!,
+    })
+  }
+
+  async sfuCall() {
+    const sfuLocalPeer = new RTCPeerConnection(rtcConfiguration)
+    this.sfuLocalPeer = sfuLocalPeer
+
+    sfuLocalPeer.addEventListener('icecandidate', event => {
+      this.sfuIceCandidate(event.candidate)
+    })
+    sfuLocalPeer.addEventListener('connectionstatechange', event => {
+      console.log(sfuLocalPeer.connectionState)
+    })
+
+    const myStream = this.myStream
+    if (myStream) {
+      const tracks = myStream.getTracks()
+      for (const track of tracks) {
+        sfuLocalPeer.addTrack(track, myStream)
+      }
+    }
+
+    const offer = await sfuLocalPeer.createOffer()
+    sfuLocalPeer.setLocalDescription(offer)
+    this.send({
+      type: 'call',
+      isSFU: true,
+      sdp: offer.sdp!,
+    })
+  }
+
+  async sfuAnswer(sessionId: string, sdp: string) {
+    const peer = new RTCPeerConnection(rtcConfiguration)
+    this.peers.set(sessionId, peer)
+
+    peer.addEventListener('icecandidate', event => {
+      this.sfuIceCandidate(event.candidate, sessionId)
+    })
+    peer.addEventListener('connectionstatechange', event => {
+      console.log(peer.connectionState)
+    })
+
+    peer.addEventListener('track', event => {
+      this.remoteStreams.set(sessionId, event.streams[0])
+      this.emit('remoteStreamChanged', { sessionId })
+    })
+
+    // set remote description
+    peer.setRemoteDescription({ type: 'offer', sdp })
+
+    // create answer and send it using this.send
+    const answer = await peer.createAnswer()
+
+    // set local description
+    peer.setLocalDescription(answer)
+
+    // send answer
+    this.send({
+      type: 'answer',
+      to: sessionId,
+      sdp: answer.sdp!,
+      isSFU: true,
     })
   }
 
@@ -304,6 +403,16 @@ class Mooyaho {
       type: 'candidate',
       to,
       candidate,
+      isSFU: false,
+    })
+  }
+
+  sfuIceCandidate(candidate: any, to?: string) {
+    this.send({
+      type: 'candidate',
+      isSFU: true,
+      candidate,
+      to,
     })
   }
 
@@ -311,6 +420,7 @@ class Mooyaho {
     this.send({
       type: 'leave',
     })
+    this.reset()
   }
 
   getSessions() {
@@ -329,6 +439,19 @@ class Mooyaho {
 
   waitUntilConnected() {
     return waitUntil(() => this.connected)
+  }
+
+  // disconnect all peers
+  // reinitialize all member variables
+  reset() {
+    this.peers.forEach(peer => {
+      peer.close()
+    })
+    this.peers.clear()
+    this.remoteStreams.clear()
+    this.channelId = ''
+    this.sfuLocalPeer?.close()
+    this.sfuLocalPeer = null
   }
 }
 

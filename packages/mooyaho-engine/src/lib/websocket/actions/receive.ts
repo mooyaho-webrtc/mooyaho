@@ -57,12 +57,19 @@ export type AnswerAction = {
   isSFU?: boolean
 }
 
-export type CandidateAction = {
-  type: 'candidate'
-  to: string
-  candidate: any
-  isSFU?: boolean
-}
+export type CandidateAction =
+  | {
+      type: 'candidate'
+      isSFU: false
+      to: string
+      candidate: any
+    }
+  | {
+      type: 'candidate'
+      isSFU: true
+      candidate: any
+      to?: string
+    }
 
 export type Message =
   | {
