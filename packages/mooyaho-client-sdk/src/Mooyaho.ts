@@ -84,7 +84,7 @@ class Mooyaho {
   }
 
   private handleConnected(sessionId: string) {
-    this.connected
+    this.connected = true
     this.sessionId = sessionId
     this.emit('connected', { sessionId })
   }
@@ -170,7 +170,6 @@ class Mooyaho {
         return
       }
       peer.setRemoteDescription({ type: 'answer', sdp: params.sdp })
-      console.log('Setting remote description succeeded')
     } else {
       if (!this.sfuLocalPeer) {
         console.error('sfuLocalPeer does not exist')
@@ -212,9 +211,6 @@ class Mooyaho {
 
     peer.addEventListener('icecandidate', event => {
       this.icecandidate(sessionId, event.candidate)
-    })
-    peer.addEventListener('connectionstatechange', event => {
-      console.log(peer.connectionState)
     })
     peer.addEventListener('track', event => {
       this.remoteStreams.set(sessionId, event.streams[0])
@@ -290,9 +286,6 @@ class Mooyaho {
     sfuLocalPeer.addEventListener('icecandidate', event => {
       this.sfuIceCandidate(event.candidate)
     })
-    sfuLocalPeer.addEventListener('connectionstatechange', event => {
-      console.log(sfuLocalPeer.connectionState)
-    })
 
     const myStream = this.myStream
     if (myStream) {
@@ -317,9 +310,6 @@ class Mooyaho {
 
     peer.addEventListener('icecandidate', event => {
       this.sfuIceCandidate(event.candidate, sessionId)
-    })
-    peer.addEventListener('connectionstatechange', event => {
-      console.log(peer.connectionState)
     })
 
     peer.addEventListener('track', event => {
@@ -363,7 +353,7 @@ class Mooyaho {
     this.events.removeListener(type, listener)
   }
 
-  connect() {
+  async connect() {
     const socket = new WebSocket(`${this.config.url}/websocket`)
     this.socket = socket
 
@@ -381,6 +371,9 @@ class Mooyaho {
         console.log(event.data)
       }
     })
+
+    await this.waitUntilConnected()
+    return this.sessionId!
   }
 
   enter(channelId: string) {
@@ -452,6 +445,10 @@ class Mooyaho {
     this.channelId = ''
     this.sfuLocalPeer?.close()
     this.sfuLocalPeer = null
+  }
+
+  directCall(sessionId: string) {
+    return this.call(sessionId)
   }
 }
 

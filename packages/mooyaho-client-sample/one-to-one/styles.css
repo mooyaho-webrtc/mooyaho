@@ -1,0 +1,8 @@
+#other {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.session-id {
+  font-size: 0.75rem;
+}
