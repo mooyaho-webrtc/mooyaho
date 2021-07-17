@@ -4,6 +4,8 @@ export interface EventMap {
   entered: { sessionId: string; user: any; isSelf: boolean }
   left: { sessionId: string }
   remoteStreamChanged: { sessionId: string }
+  sfuPeerConnected: { peer: RTCPeerConnection }
+  peerConnected: { sessionId: string; peer: RTCPeerConnection }
 }
 
 export type EventType = keyof EventMap

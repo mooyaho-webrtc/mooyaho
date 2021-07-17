@@ -216,6 +216,14 @@ class Mooyaho {
       this.remoteStreams.set(sessionId, event.streams[0])
       this.emit('remoteStreamChanged', { sessionId })
     })
+    peer.addEventListener('connectionstatechange', e => {
+      if (peer.connectionState === 'connected') {
+        this.emit('peerConnected', {
+          sessionId,
+          peer,
+        })
+      }
+    })
 
     // put tracks of myStream into peer
     if (this.myStream) {
@@ -239,6 +247,9 @@ class Mooyaho {
   }
 
   private async answer(sessionId: string, sdp: string) {
+    if (this.channelId === '' && !this.config.allowDirectCall) return
+    if (this.config.allowDirectCall && this.peers.size === 1) return
+
     // create peer and store to peers
     const peer = new RTCPeerConnection(rtcConfiguration)
     this.peers.set(sessionId, peer)
@@ -252,6 +263,15 @@ class Mooyaho {
     // do icecandidate
     peer.addEventListener('icecandidate', event => {
       this.icecandidate(sessionId, event.candidate)
+    })
+
+    peer.addEventListener('connectionstatechange', e => {
+      if (peer.connectionState === 'connected') {
+        this.emit('peerConnected', {
+          sessionId,
+          peer,
+        })
+      }
     })
 
     // put tracks of myStream into peer
@@ -287,6 +307,14 @@ class Mooyaho {
       this.sfuIceCandidate(event.candidate)
     })
 
+    sfuLocalPeer.addEventListener('connectionstatechange', e => {
+      if (sfuLocalPeer.connectionState === 'connected') {
+        this.emit('sfuPeerConnected', {
+          peer: sfuLocalPeer,
+        })
+      }
+    })
+
     const myStream = this.myStream
     if (myStream) {
       const tracks = myStream.getTracks()
@@ -315,6 +343,15 @@ class Mooyaho {
     peer.addEventListener('track', event => {
       this.remoteStreams.set(sessionId, event.streams[0])
       this.emit('remoteStreamChanged', { sessionId })
+    })
+
+    peer.addEventListener('connectionstatechange', e => {
+      if (peer.connectionState === 'connected') {
+        this.emit('peerConnected', {
+          sessionId,
+          peer,
+        })
+      }
     })
 
     // set remote description
@@ -448,12 +485,17 @@ class Mooyaho {
   }
 
   directCall(sessionId: string) {
+    if (!this.config.allowDirectCall) {
+      console.error('Please activate allowDirectCall in your config')
+      return
+    }
     return this.call(sessionId)
   }
 }
 
 export interface MooyahoConfig {
   url: string
+  allowDirectCall?: boolean
 }
 
 export default Mooyaho

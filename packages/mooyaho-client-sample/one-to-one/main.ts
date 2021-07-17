@@ -2,6 +2,7 @@ import Mooyaho, { MooyahoConfig } from 'mooyaho-client-sdk/src/index'
 
 const config: MooyahoConfig = {
   url: 'ws://localhost:8081',
+  allowDirectCall: true,
 }
 
 const mooyaho = new Mooyaho(config)
