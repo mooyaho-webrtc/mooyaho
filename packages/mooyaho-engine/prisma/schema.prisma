@@ -15,7 +15,7 @@ model Channel {
   sfuServerId Int?
 
   ChannelSessions ChannelSession[]
-  sfuServer       SFUServer?       @relation(fields: [sfuServerId], references: [id])
+  sfuServer       SfuServer?       @relation(fields: [sfuServerId], references: [id])
 }
 
 model Session {
@@ -44,7 +44,7 @@ model User {
   Session Session[]
 }
 
-model SFUServer {
+model SfuServer {
   id       Int       @id @default(autoincrement())
   address  String
   disabled Boolean   @default(false)

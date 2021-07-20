@@ -19,34 +19,12 @@ import sessionService from '../../services/sessionService'
 import channelService from '../../services/channelService'
 import config from '../../configLoader'
 import { Client } from 'mooyaho-grpc'
+import prisma from '../prisma'
+import SFUManager from '../SFUManager'
+import sfuServerService from '../../services/sfuServerService'
 
-const grpcClient = new Client('localhost:50000')
-
-function startListenSignal() {
-  grpcClient
-    .listenSignal(signal => {
-      if (signal.type === 'icecandidate') {
-        subscription.dispatch(
-          prefixer.direct(signal.sessionId),
-          actionCreators.candidated(
-            signal.fromSessionId!,
-            JSON.parse(signal.candidate),
-            true
-          )
-        )
-      } else if (signal.type === 'offer') {
-        subscription.dispatch(
-          prefixer.direct(signal.sessionId),
-          actionCreators.called(signal.fromSessionId, signal.sdp, true)
-        )
-      }
-    })
-    .catch(e => {
-      setTimeout(startListenSignal, 250)
-    })
-}
-
-startListenSignal()
+const sfuManager = new SFUManager()
+sfuManager.initialize()
 
 const { SESSION_SECRET_KEY } = process.env
 
@@ -60,6 +38,7 @@ class Session {
   private currentChannel: string | null = null
   private unsubscriptionMap = new Map<string, () => void>()
   connectedToSFU: boolean = false
+  sfuId: number | null = null
 
   constructor(private socket: WebSocket) {
     this.id = v4()
@@ -181,6 +160,7 @@ class Session {
     await this.subscribe(prefixer.channel(channelId))
     if (channel.sfuServerId) {
       this.connectedToSFU = true
+      this.sfuId = channel.sfuServerId
     }
     this.sendJSON(actionCreators.enterSuccess(!!channel.sfuServerId))
 
@@ -213,9 +193,11 @@ class Session {
 
   async handleCall(action: CallAction) {
     if (action.isSFU) {
-      if (!this.currentChannel) return
+      if (!this.currentChannel || !this.sfuId) return
       try {
-        const result = await grpcClient.call({
+        const sfuClient = sfuManager.getClient(this.sfuId)
+        if (!sfuClient) return
+        const result = await sfuClient.call({
           channelId: this.currentChannel,
           sessionId: this.id,
           sdp: action.sdp,
@@ -237,8 +219,11 @@ class Session {
   handleAnswer(action: AnswerAction) {
     const { isSFU, to, sdp } = action
     if (isSFU) {
-      if (!this.currentChannel) return
-      grpcClient.answer({
+      if (!this.currentChannel || !this.sfuId) return
+      const sfuClient = sfuManager.getClient(this.sfuId)
+      if (!sfuClient) return
+
+      sfuClient.answer({
         channelId: this.currentChannel,
         fromSessionId: this.id,
         sdp,
@@ -256,11 +241,13 @@ class Session {
   handleCandidate(action: CandidateAction) {
     const { to, isSFU, candidate } = action
 
-    if (isSFU) {
+    if (isSFU && this.sfuId) {
+      const sfuClient = sfuManager.getClient(this.sfuId)
+      if (!sfuClient) return
       try {
         // ensures answer first
         setTimeout(() => {
-          grpcClient.clientIcecandidate({
+          sfuClient.clientIcecandidate({
             sessionId: to,
             fromSessionId: this.id,
             candidate: JSON.stringify(candidate),
@@ -297,8 +284,9 @@ class Session {
     // remove from channel
     if (!this.currentChannel) return
     channelHelper.leave(this.currentChannel, this.id)
-    if (this.connectedToSFU) {
-      grpcClient.leave({
+    if (this.connectedToSFU && this.sfuId) {
+      const sfuClient = sfuManager.getClient(this.sfuId)
+      sfuClient?.leave({
         sessionId: this.id,
         channelId: this.currentChannel,
       })

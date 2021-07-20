@@ -1,0 +1,10 @@
+{
+  "title": "Create SFU Server Body",
+  "type": "object",
+  "properties": {
+    "address": {
+      "type": "string"
+    }
+  },
+  "required": ["address"]
+}
