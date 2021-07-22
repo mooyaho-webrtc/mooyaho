@@ -49,3 +49,5 @@ mooyaho.addEventListener('remoteStreamChanged', e => {
   }
   video.srcObject = mooyaho.getRemoteStreamById(e.sessionId)
 })
+
+console.log('hello')

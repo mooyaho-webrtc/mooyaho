@@ -15,6 +15,9 @@ class Mooyaho {
   sfuEnabled = false
   channelId: string = ''
   peers = new Map<string, RTCPeerConnection>()
+
+  initialSessionId: string | null = null
+  sessionToken: string | null = null
   private myStream: MediaStream | null = null
   private remoteStreams = new Map<string, MediaStream>()
 
@@ -30,6 +33,8 @@ class Mooyaho {
   }
 
   private connected = false
+  // this is true until it gets disposed after connection
+  private connectedState = false
 
   constructor(private config: MooyahoConfig) {}
 
@@ -53,7 +58,7 @@ class Mooyaho {
   private handleSocketAction(action: ServerSentAction) {
     switch (action.type) {
       case 'connected':
-        this.handleConnected(action.id)
+        this.handleConnected(action.id, action.token)
         break
       case 'enterSuccess':
         this.handleEnterSuccess(action.sfuEnabled)
@@ -77,15 +82,23 @@ class Mooyaho {
       case 'listSessionsSuccess':
         this.handleListSessionsSuccess(action.sessions)
         break
+      case 'reuseIdSuccess':
+        this.handleReuseIdSuccess()
+        break
       default:
         console.log('Unhandled action: ', action)
         break
     }
   }
 
-  private handleConnected(sessionId: string) {
+  private handleConnected(sessionId: string, sessionToken: string) {
     this.connected = true
+    this.connectedState = true
     this.sessionId = sessionId
+    if (!this.sessionToken) {
+      this.initialSessionId = sessionId
+      this.sessionToken = sessionToken
+    }
     this.emit('connected', { sessionId })
   }
 
@@ -198,6 +211,14 @@ class Mooyaho {
 
   private handleListSessionsSuccess(sessions: { id: string; user: any }[]) {
     this.localEvents.emit('listSessions', { sessions })
+  }
+
+  private handleReuseIdSuccess() {
+    this.emit('reconnected', { sessionId: this.sessionId! })
+    // re-enter channel if exists
+    if (this.channelId !== '') {
+      this.enter(this.channelId)
+    }
   }
 
   private send(action: ReceiveAction) {
@@ -390,12 +411,32 @@ class Mooyaho {
     this.events.removeListener(type, listener)
   }
 
+  reuseSession() {
+    const { initialSessionId, sessionToken } = this
+    if (!initialSessionId || !sessionToken) return
+
+    this.send({
+      type: 'reuseId',
+      id: initialSessionId,
+      token: sessionToken,
+    })
+  }
+
   async connect() {
     const socket = new WebSocket(`${this.config.url}/websocket`)
     this.socket = socket
 
     socket.addEventListener('close', () => {
       this.connected = false
+      if (this.connectedState) {
+        // @todo: increase retry delay if fails again
+        setTimeout(() => {
+          this.connect().then(() => {
+            this.sessions.clear()
+            this.reuseSession()
+          })
+        }, 1000)
+      }
     })
 
     socket.addEventListener('message', event => {
@@ -490,6 +531,18 @@ class Mooyaho {
       return
     }
     return this.call(sessionId)
+  }
+
+  dispose() {
+    this.connectedState = false
+    this.connected = false
+    this.reset()
+    this.socket?.close()
+  }
+
+  // to test websocket reconnection
+  manuallyDisconnect() {
+    this.socket?.close()
   }
 }
 

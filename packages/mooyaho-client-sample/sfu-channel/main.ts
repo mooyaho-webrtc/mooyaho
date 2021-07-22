@@ -39,7 +39,7 @@ leaveButton.addEventListener('click', () => {
 })
 
 const config: MooyahoConfig = {
-  url: 'ws://localhost:8080',
+  url: 'ws://localhost:8081',
 }
 
 const mooyaho = new Mooyaho(config)
@@ -133,3 +133,5 @@ mooyaho.connect()
 
 // for debug purpose
 ;(window as any).mooyaho = mooyaho
+
+console.log('hello')

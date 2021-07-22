@@ -47,6 +47,24 @@ const sessionService = {
       user: parsed,
     }
   },
+
+  async reintegrate(sessionId: string, prevSessionId: string) {
+    const prevSession = await prisma.session.findUnique({
+      where: { id: prevSessionId },
+      include: {
+        user: true,
+      },
+    })
+    if (!prevSession) return false
+    await prisma.session.create({
+      data: {
+        id: sessionId,
+        userId: prevSession.userId,
+      },
+    })
+    return JSON.parse(prevSession.user.json)
+  },
+
   async getUserBySessionId(sessionId: string) {
     const session = await prisma.session.findUnique({
       where: { id: sessionId },

@@ -43,7 +43,10 @@ const mooyaho = new Mooyaho(config)
 mooyaho
   .createUserMedia({
     audio: true,
-    video: true,
+    video: {
+      width: { max: 720 },
+      height: { max: 480 },
+    },
   })
   .then(stream => {
     // add video tag to body and set stream
@@ -56,15 +59,20 @@ mooyaho
     document.getElementById('me').appendChild(video)
   })
 
+let integrated = false
+
 mooyaho.addEventListener('connected', e => {
   console.log('Successfully connected to Mooyaho Server')
   console.log(`Session ID: ${e.sessionId}`)
   // NOTE: To intergate user from browser, `allowAnonymous` field
   // should be true from mooyaho.config.json of mooyaho-server.
   // In normal cases, user should be integrated by using server SDK
-  mooyaho.integrateUser({
-    username: usernameInput.value,
-  })
+  if (!integrated) {
+    mooyaho.integrateUser({
+      username: usernameInput.value,
+    })
+    integrated = true
+  }
 })
 
 mooyaho.addEventListener('enterSuccess', e => {
@@ -123,6 +131,10 @@ mooyaho.addEventListener('remoteStreamChanged', e => {
 
   const video = sessionDiv.querySelector('video')
   video.srcObject = stream
+})
+
+mooyaho.addEventListener('reconnected', () => {
+  othersDiv.innerHTML = ''
 })
 
 mooyaho.connect()

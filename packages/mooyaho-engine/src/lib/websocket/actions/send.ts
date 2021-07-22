@@ -18,6 +18,7 @@ export type GetIdSuccessAction = {
 
 export type ReuseIdSuccessAction = {
   type: 'reuseIdSuccess'
+  user: any
 }
 
 export type SubscriptionMessageAction = {
@@ -130,7 +131,10 @@ const actionCreators = {
     type: 'getIdSuccess',
     id: id,
   }),
-  reuseIdSuccess: (): ReuseIdSuccessAction => ({ type: 'reuseIdSuccess' }),
+  reuseIdSuccess: (user: any): ReuseIdSuccessAction => ({
+    type: 'reuseIdSuccess',
+    user,
+  }),
   subscriptionMessage: (
     key: string,
     message: any

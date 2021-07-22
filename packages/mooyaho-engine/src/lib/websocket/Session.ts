@@ -61,6 +61,7 @@ class Session {
         break
       }
       case 'reuseId': {
+        this.handleReuseId(action.id, action.token)
         break
       }
       case 'subscribe': {
@@ -127,6 +128,22 @@ class Session {
   private handleGetId() {
     const action = actionCreators.getIdSuccess(this.id)
     this.sendJSON(action)
+  }
+
+  private async handleReuseId(id: string, token: string) {
+    const generatedToken = createHmac('sha256', SESSION_SECRET_KEY!)
+      .update(id)
+      .digest('hex')
+    console.log(generatedToken, token)
+
+    if (token === generatedToken) {
+      try {
+        const user = await sessionService.reintegrate(this.id, id)
+        this.sendJSON(actionCreators.reuseIdSuccess(user))
+      } catch (e) {
+        console.error(e)
+      }
+    }
   }
 
   private handleSubscribe(key: string) {

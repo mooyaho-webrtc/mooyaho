@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "dist/cjs/bundle.js",
   "module": "dist/es/bundle.js",
-  "types": "dist/types/index.d.ts",
+  "types": "dist/types/mooyaho-client-sdk/src/index.d.ts",
   "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-typescript": "^8.2.1",
