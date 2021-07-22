@@ -6,8 +6,14 @@ const createRedisClient = () => {
 }
 
 export const coreRedisClient = createRedisClient()
+
+// this subscriber is used for sessions
 export const globalSubscriber = createRedisClient()
 
-const publishAsync = promisify(coreRedisClient.publish).bind(coreRedisClient)
+export const localSubscriber = createRedisClient()
+
+export const publishAsync = promisify(coreRedisClient.publish).bind(
+  coreRedisClient
+)
 export const publishJSON = (channel: string, json: any) =>
   publishAsync(channel, JSON.stringify(json))

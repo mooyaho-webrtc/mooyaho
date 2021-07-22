@@ -9,19 +9,14 @@ import {
 } from './actions/receive'
 import actionCreators from './actions/send'
 import { createHmac } from 'crypto'
-import { globalSubscriber } from './redis/createRedisClient'
 import subscription from './redis/subscription'
 import channelHelper from './channelHelper'
 import prefixer from './redis/prefixer'
 import rtcHelper from './rtcHelper'
-import { Description } from './actions/common'
 import sessionService from '../../services/sessionService'
 import channelService from '../../services/channelService'
 import config from '../../configLoader'
-import { Client } from 'mooyaho-grpc'
-import prisma from '../prisma'
 import SFUManager from '../SFUManager'
-import sfuServerService from '../../services/sfuServerService'
 
 const sfuManager = new SFUManager()
 sfuManager.initialize()

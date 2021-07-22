@@ -1,6 +1,10 @@
 import { SfuServer } from '@prisma/client'
 import { create } from 'domain'
 import prisma from '../lib/prisma'
+import {
+  localSubscriber,
+  publishAsync,
+} from '../lib/websocket/redis/createRedisClient'
 
 const sfuServerService = {
   async list() {
@@ -46,6 +50,8 @@ const sfuServerService = {
         address,
       },
     })
+
+    publishAsync('sfu_created', sfuServer.id.toString())
     return sfuServer
   },
 
@@ -61,7 +67,9 @@ const sfuServerService = {
     return sfuServer
   },
 
-  async delete(id: number) {
+  async delete(id: number, force?: boolean) {
+    // @todo: check if there are sessions on this sfuServer
+
     await prisma.sfuServer.delete({
       where: {
         id,
@@ -81,6 +89,15 @@ const sfuServerService = {
     })
 
     return channel?.sfuServer ?? null
+  },
+
+  async getSFUServerById(id: number) {
+    const sfuServer = await prisma.sfuServer.findUnique({
+      where: {
+        id,
+      },
+    })
+    return sfuServer
   },
 }
 
