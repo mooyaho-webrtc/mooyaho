@@ -2,6 +2,7 @@ import { v4 } from 'uuid'
 import { MooyahoError } from '../lib/MooyahoError'
 import prisma from '../lib/prisma'
 import channelHelper from '../lib/websocket/channelHelper'
+import sfuServerService from './sfuServerService'
 
 const channelService = {
   async getChannelInfo(id: string) {
@@ -43,10 +44,14 @@ const channelService = {
   },
   async create(sfuEnabled: boolean) {
     const id = v4()
+    const sfuServerid = sfuEnabled
+      ? await sfuServerService.getNextSFUServerId()
+      : undefined
+
     const channel = await prisma.channel.create({
       data: {
         id,
-        sfuServerId: sfuEnabled ? 1 : undefined,
+        sfuServerId: sfuServerid,
       },
     })
 

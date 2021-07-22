@@ -4,7 +4,7 @@ import MooyahoServerSDK from 'mooyaho-server-sdk'
 
 // CAUTION: Server SDK should be only used from server
 const serverSDK = new MooyahoServerSDK(
-  'http://localhost:8081',
+  'http://localhost:8080',
   'ec24c791f058b01abccc8e3c5e8cd50b'
 )
 
@@ -39,7 +39,7 @@ leaveButton.addEventListener('click', () => {
 })
 
 const config: MooyahoConfig = {
-  url: 'ws://localhost:8081',
+  url: 'ws://localhost:8080',
 }
 
 const mooyaho = new Mooyaho(config)

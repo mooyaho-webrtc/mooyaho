@@ -11,6 +11,35 @@ const sfuServerService = {
     })
   },
 
+  async listWithStats() {
+    const list = await this.list()
+    const stats: { sfuServerId: number; sessions: number }[] =
+      await prisma.$queryRaw(`SELECT c.sfuServerId, COUNT(*) as sessions from ChannelSession cs 
+      inner join Channel c on cs.channelId  = c.id
+      group by c.sfuServerId 
+      order by sessions asc
+    `)
+    // convert statsArray to Map
+    const statsMap = new Map<number, number>()
+    stats.forEach(({ sfuServerId, sessions }) => {
+      statsMap.set(sfuServerId, sessions)
+    })
+
+    // return list with joined stats
+    const listWithStats = list.map(s => ({
+      ...s,
+      sessions: statsMap.get(s.id) ?? 0,
+    }))
+
+    // sort listWithStats by sessions and return
+    return listWithStats.sort((a, b) => a.sessions - b.sessions)
+  },
+
+  async getNextSFUServerId() {
+    const listWithStats = await this.listWithStats()
+    return listWithStats[0]?.id
+  },
+
   async create(address: string) {
     const sfuServer = await prisma.sfuServer.create({
       data: {

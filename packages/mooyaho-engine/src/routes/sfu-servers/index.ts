@@ -8,7 +8,7 @@ const sfuServers: FastifyPluginAsync = async fastify => {
   fastify.register(protect)
 
   fastify.get('/', async () => {
-    return sfuServerService.list()
+    return sfuServerService.listWithStats()
   })
 
   fastify.post<{

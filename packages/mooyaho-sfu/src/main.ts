@@ -75,13 +75,15 @@ const mooyahoServer: MooyahoHandlers = {
   },
 }
 
+const port = process.env.PORT ?? '50000'
+
 server.addService(proto.mooyaho.Mooyaho.service, mooyahoServer)
 server.bindAsync(
-  'localhost:50000',
+  `localhost:${port}`,
   ServerCredentials.createInsecure(),
   (err, port) => {
     server.start()
-    console.log('Running server...')
+    console.log(`Running server on ${port}...`)
   }
 )
 
