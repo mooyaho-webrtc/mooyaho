@@ -41,7 +41,7 @@ const sfuServerService = {
 
   async getNextSFUServerId() {
     const listWithStats = await this.listWithStats()
-    return listWithStats[0]?.id
+    return listWithStats.filter(server => !server.disabled)[0]?.id
   },
 
   async create(address: string) {
