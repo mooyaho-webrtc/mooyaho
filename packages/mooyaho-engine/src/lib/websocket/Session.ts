@@ -134,7 +134,6 @@ class Session {
     const generatedToken = createHmac('sha256', SESSION_SECRET_KEY!)
       .update(id)
       .digest('hex')
-    console.log(generatedToken, token)
 
     if (token === generatedToken) {
       try {

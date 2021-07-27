@@ -18,3 +18,11 @@ fastify.listen(3000, function (err, address) {
   }
   fastify.log.info(`server listening on ${address}`)
 })
+
+process.on('SIGINT', async () => {
+  // startClosing()
+  // await disconnectAllSessions()
+  // setTimeout(() => {
+  //   process.exit(0)
+  // }, 1000)
+})

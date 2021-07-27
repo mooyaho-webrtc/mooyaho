@@ -6,10 +6,15 @@ import fs from 'fs'
 import Session from '../../lib/websocket/Session'
 import prisma from '../../lib/prisma'
 import channelHelper from '../../lib/websocket/channelHelper'
+import { getClosing } from '../../lib/close'
 
 const sessions = new Set<Session>()
 const websocket: FastifyPluginAsync = async fastify => {
   fastify.get('/', { websocket: true }, (connection, req) => {
+    if (getClosing()) {
+      connection.socket.close()
+      return
+    }
     const session = new Session(connection.socket)
 
     addSessionId(session.id)
@@ -27,9 +32,9 @@ const websocket: FastifyPluginAsync = async fastify => {
     })
 
     connection.socket.on('close', async (code, reason) => {
-      await session.dispose()
-      removeSessionId(session.id)
       sessions.delete(session)
+      await session.dispose()
+      await removeSessionId(session.id)
     })
   })
 }
@@ -40,17 +45,21 @@ const sessionIds = new Set()
 
 function syncSessionIds() {
   const sessionIdsArray = [...sessionIds]
-  fs.writeFile(sessionIdsPath, sessionIdsArray.join(','), 'utf-8', err => {})
+  return new Promise<void>(resolve =>
+    fs.writeFile(sessionIdsPath, sessionIdsArray.join(','), 'utf-8', err => {
+      resolve()
+    })
+  )
 }
 
 function addSessionId(sessionId: string) {
   sessionIds.add(sessionId)
-  syncSessionIds()
+  return syncSessionIds()
 }
 
 function removeSessionId(sessionId: string) {
   sessionIds.delete(sessionId)
-  syncSessionIds()
+  return syncSessionIds()
 }
 
 async function cleanSession(id: string) {

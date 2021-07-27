@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "npm run build:ts && tsc -p test/tsconfig.test.json && cross-env TS_NODE_FILES=true tap test/**/*.test.ts",
-    "start": "npm run build:ts && fastify start -l info dist/app.js",
+    "start": "ts-node -T ./src/server.ts",
     "build:ts": "tsc",
     "dev": "tsc && concurrently -k -p \"[{name}]\" -n \"TypeScript,App\" -c \"yellow.bold,cyan.bold\" \"tsc -w\" \"fastify start --ignore-watch=.ts$ -w -l info -P dist/app.js\"",
     "prisma:generate": "prisma generate",
@@ -22,6 +22,7 @@
     "@prisma/client": "^2.23.0",
     "@types/uuid": "^8.3.0",
     "@types/ws": "^7.4.4",
+    "close-with-grace": "^1.1.0",
     "fastify": "^3.0.0",
     "fastify-autoload": "^3.3.1",
     "fastify-cli": "^2.11.0",
@@ -48,6 +49,7 @@
     "fastify-tsconfig": "^1.0.1",
     "json-schema-to-typescript": "^10.1.4",
     "tap": "^14.11.0",
+    "ts-node": "^10.1.0",
     "typescript": "^4.1.3"
   }
 }
