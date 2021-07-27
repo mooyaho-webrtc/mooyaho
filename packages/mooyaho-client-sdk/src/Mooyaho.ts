@@ -28,6 +28,8 @@ class Mooyaho {
   private localEvents = new EventEmitter<LocalEventMap>()
   sessions: Map<string, { id: string; user: any }> = new Map()
 
+  private cancelConnect: (() => void) | null = null
+
   get sessionsArray() {
     return Array.from(this.sessions.values())
   }
@@ -431,10 +433,13 @@ class Mooyaho {
       if (this.connectedState) {
         // @todo: increase retry delay if fails again
         setTimeout(() => {
-          this.connect().then(() => {
-            this.sessions.clear()
-            this.reuseSession()
-          })
+          this.cancelConnect?.()
+          this.connect()
+            .then(() => {
+              this.sessions.clear()
+              this.reuseSession()
+            })
+            .catch(e => {})
         }, 1000)
       }
     })
@@ -450,7 +455,16 @@ class Mooyaho {
       }
     })
 
-    await this.waitUntilConnected()
+    let _resolve: () => void = () => {}
+    try {
+      const cancelled = new Promise<void>((resolve, reject) => {
+        _resolve = resolve
+        this.cancelConnect = reject
+      })
+      await Promise.race([this.waitUntilConnected(), cancelled])
+      this.cancelConnect = null
+      _resolve()
+    } catch (e) {}
     return this.sessionId!
   }
 

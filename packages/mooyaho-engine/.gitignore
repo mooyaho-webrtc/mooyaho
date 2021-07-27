@@ -69,3 +69,4 @@ dist
 **/migrations
 dev.db
 dev.db-journal
+.sessionIds

@@ -1034,6 +1034,13 @@
     "@babel/helper-validator-identifier" "^7.14.5"
     to-fast-properties "^2.0.0"
 
+"@dnlup/fastify-traps@^1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@dnlup/fastify-traps/-/fastify-traps-1.1.2.tgz#daaf9fd262207552cbfc893dc43a9f8298cb61c1"
+  integrity sha512-EpN8h44nQAIxcnK3G2KECjqYEl0qaHE/3gklJ8KPepbFJ4FEwuseS0h6slhCeJ9+gAVPOjIdOHMy3okkujNdYA==
+  dependencies:
+    fastify-plugin "^3.0.0"
+
 "@fastify/ajv-compiler@^1.0.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@fastify/ajv-compiler/-/ajv-compiler-1.1.0.tgz#5ce80b1fc8bebffc8c5ba428d5e392d0f9ed10a1"
@@ -6566,6 +6573,11 @@ node-forge@^0.10.0:
   version "0.10.0"
   resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-0.10.0.tgz#32dea2afb3e9926f02ee5ce8794902691a676bf3"
   integrity sha512-PPmu8eEeG9saEUvI97fm4OYxXVB6bFvyNTyiUOBichBpFG8A1Ljw3bY62+5oOjDEMHRnd0Y7HQ+x7uzxOzC6JA==
+
+node-graceful-shutdown@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/node-graceful-shutdown/-/node-graceful-shutdown-1.1.0.tgz#f96558b687e153e94f3cf44ab7c4591a9b6c2f96"
+  integrity sha512-g1tq/R8ie/At5xRHGfF+chTge1jVPxf1NEClLpZIPxOPi6PJ9II81T35ms1u+s4N/mqOCp60CFd+ps+DIWRigQ==
 
 node-gyp-build@^4.2.3:
   version "4.2.3"

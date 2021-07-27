@@ -14,9 +14,11 @@ const channelHelper = {
     )
     channelService.addUser(channel, sessionId)
   },
-  leave(channel: string, sessionId: string) {
-    publishJSON(prefixer.channel(channel), actionCreators.left(sessionId))
-    channelService.removeUser(sessionId)
+  async leave(channel: string, sessionId: string) {
+    await publishJSON(prefixer.channel(channel), actionCreators.left(sessionId))
+    console.log('published')
+    await channelService.removeUser(sessionId)
+    console.log('removed')
   },
   message(channel: string, sessionId: string, message: Message) {
     publishJSON(

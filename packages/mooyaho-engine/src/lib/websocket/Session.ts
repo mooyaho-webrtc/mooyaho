@@ -290,19 +290,24 @@ class Session {
     this.sendJSON(message)
   }
 
-  dispose() {
+  async dispose() {
     const fns = Array.from(this.unsubscriptionMap.values())
     fns.forEach(fn => fn())
     // remove from channel
     if (!this.currentChannel) return
-    channelHelper.leave(this.currentChannel, this.id)
+
+    console.log('remove session from channel')
+    await channelHelper.leave(this.currentChannel, this.id)
+    console.log('removed session')
     if (this.connectedToSFU && this.sfuId) {
       const sfuClient = sfuManager.getClient(this.sfuId)
-      sfuClient?.leave({
+      await sfuClient?.leave({
         sessionId: this.id,
         channelId: this.currentChannel,
       })
     }
+    this.currentChannel = null
+    console.log('disposed ', this.id)
   }
 }
 
