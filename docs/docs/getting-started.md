@@ -67,22 +67,70 @@ If you need authentication feature in your app, you have to install Mooyaho Serv
 
 ## Build Your First Mooyaho App
 
-If you have installed Client / Server SDK, and have started your Mooyaho Server, then you are ready to build your first Mooyaho App. Suppose your Mooyaho Server address is `localhost:8080`, you can initialize Mooyaho instance and connect to the server by following code:
+If you have installed Client / Server SDK, and have started your Mooyaho Server, then you are ready to build your first Mooyaho App.
+
+### Initialize Client SDK Instance
+
+Suppose your Mooyaho Server address is `localhost:8080`, you can initialize Mooyaho instance and connect to the server by following code:
 
 ```javascript
 import Mooyaho from '@mooyaho/browser'
 
 const mooyaho = new Mooyaho({
-  ws: 'ws://localhost:8081',
+  ws: 'ws://localhost:8080',
 })
 ```
 
-When user has connected to Mooyoho server, server will issue user a Session ID. You can check this Session ID by registering `connected` event
+### Integrate User
+
+When user has connected to Mooyoho server, server will issue user a Session ID. You can check this Session ID by register a callback function to `connected` event
 
 ```javascript
 mooyaho.addEventListener('connected', (e) => {
   console.log(`Session ID: ${e.sessionId}`)
+  sendSessionIdToServer(e.sessionId) // implement it by yourself.
 })
 ```
 
 At this point, you have to integrate user information with your Session ID. In order to do that, you have to pass the Session ID to your service server (by REST API or Websocket implemented by yourself). When server receives the Session ID of the user, user information can be integrated by using this code.
+
+```javascript
+import MooyahoServerSDK from '@mooyaho/server-sdk'
+
+// Initialize Server SDK Instance
+// API_KEY is set in .env file.
+const serverSDK = new MooyahoServerSDK('http://localhost:8080', 'YOUR_API_KEY')
+
+// when server receives sessionId:
+app.post('/integrate', async (req, res) => {
+  const { sessionId } = req.body
+  const user = req.user
+  await serverSDK.integrateUser(sessionId, {
+    id: user.id.toString(), // only id field is necessary
+    username: user.username, // extra field example
+    /*
+      ...
+      You can put any extra fields
+    */,
+  })
+  res.send(true)
+})
+```
+
+### Create Channel
+
+채널 생성은 1:1이 아닌 경우엔 필수임
+채널 만드는 것 또한 서버 SDK를 써야함 사용자가 특정 액션을 취하여 채널 생성을 하면 서버에서 다음과 같이 만들면 됨
+// 추가적으로 나중에 만들 기능
+
+- 만약 allowAnonymous 가 true 면 이 명령어로 바로 실행 가능
+  ....
+
+### Enter Channel
+
+채널에 들어가기 전에 미디어를 준비해야 함. 비디오 / 음성 넣고 그다음에 Enter 하면 됨. 만약에 미디어 없으면 이렇게 하면 됨.
+미디어 없는 예시는 작동하려나..? 그건 의문임. 따로 구현해야 할듯?
+
+### Leave Channel
+
+채널에서 나오고 싶으면 이거 쓰면 됨
