@@ -65,9 +65,9 @@ npm install @mooyaho/browser
 
 If you need authentication feature in your app, you have to install Mooyaho Server SDK to your service server. This SDK allows you to integrate user information with the users who are connected to the Mooyaho Server. If you do not need any authentication feature, you can set `allowAnonymous` option to `true` from `mooyaho.config.json`. By setting this option, users can setup their user information directly from client. For detailed information check this link: [Allow Anonymous](./architecture.md)
 
-## Build Your First Mooyaho App
+## Overview
 
-If you have installed Client / Server SDK, and have started your Mooyaho Server, then you are ready to build your first Mooyaho App.
+In this section, you will learn the basic usage of **Mooyaho**. After reading this section please read the Tutorials page where you can actually put your hands on Mooyaho and build your own app step by step.
 
 ### Initialize Client SDK Instance
 
@@ -119,18 +119,139 @@ app.post('/integrate', async (req, res) => {
 
 ### Create Channel
 
-채널 생성은 1:1이 아닌 경우엔 필수임
-채널 만드는 것 또한 서버 SDK를 써야함 사용자가 특정 액션을 취하여 채널 생성을 하면 서버에서 다음과 같이 만들면 됨
-// 추가적으로 나중에 만들 기능
+Creating channel is mandatory when you want to implement video/audio chat for multiple users. If you want to implement 1:1 video/audio chat, this process can be skipped.
 
-- 만약 allowAnonymous 가 true 면 이 명령어로 바로 실행 가능
-  ....
+To create channel, following API should be called via Server SDK.
+
+```typescript
+serverSDK.createChannel(isSFU?: boolean): Promise<Channel>
+```
+
+If you want to enable SFU Server for your channel, you should set `isSFU` paramaeter to `true`. This parameter is optional, if you do not need SFU Server, you can just omit the parameter.
+
+#### Example
+
+```javascript
+const channel = await serverSDK.createChannel()
+```
+
+`Channel` object contains `id` and `sfuServerId`. Normally, you do not need to deal with `sfuServerId`. After creating a channel, you have to pass the `channel.id` to user in order for user to enter the channel.
+
+You can implement this by using REST API or WebSocket.
+
+### Prepare User Media
+
+Before entering channel, user has to prepare user media by following API of client SDK.
+
+```typescript
+mooyaho.createUserMedia(constraints: MediaStreamConstraints): Promise<MediaStream>
+```
+
+After calling this method, it will resolve MediaStream so that you can show the video from your video DOM.
+
+`contstraints` is the same type of the [`navigator.getUserMedia`](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia).
+
+#### Example
+
+```javascript
+mooyaho
+  .createUserMedia({
+    audio: true,
+    video: {
+      width: { max: 720 },
+      height: { max: 480 },
+    },
+  })
+  .then((stream) => {
+    // add video tag to body and set stream
+    const video = document.createElement('video')
+    video.muted = true
+    video.autoplay = true
+    video.srcObject = stream
+    document.getElementById('me').appendChild(video)
+  })
+```
+
+> Currently, [getDisplayMedia](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getDisplayMedia) for screen sharing is not supported yet. This will be implemented in future release.
 
 ### Enter Channel
 
-채널에 들어가기 전에 미디어를 준비해야 함. 비디오 / 음성 넣고 그다음에 Enter 하면 됨. 만약에 미디어 없으면 이렇게 하면 됨.
-미디어 없는 예시는 작동하려나..? 그건 의문임. 따로 구현해야 할듯?
+After getting the user media prepared, the user can enter to the channel by calling `enter` API of the Client SDK.
 
-### Leave Channel
+```typescript
+mooyaho.enter(id: string): void
+```
 
-채널에서 나오고 싶으면 이거 쓰면 됨
+The `id` parameter is the `channel.id` that has been created in the [Create Channel](/docs/getting-started#create-channel) section.
+
+If you want to execute some tasks after user successfully enters the channel, you can register the handler function by using `addEventListener` API.
+
+#### Example
+
+```javascript
+mooyaho.addEventListener('enterSuccess', (e) => {
+  console.log(`Successfully entered to channel ${mooyaho.channelId}`)
+  console.log(`SFU is ${e.sfuEnabled ? 'enabled' : 'disabled'} in this channel`)
+  // Do Something
+
+  // Usually, you can implement the UI that represents other users that are in this channel.
+  // sessonsArray contains the session information of all users in the channel including yourself.
+  const sessionArray = mooyaho.sessionsArray
+
+  sessionArray.forEach((session) => {
+    if (session.id === mooyaho.sessionId) return // ignore session for yourself
+    const sessionDiv = createSessionDiv(session.id, session.user.username)
+    othersDiv.appendChild(sessionDiv)
+  })
+})
+```
+
+### Dealing with other user's enter and leave
+
+If you want to do something when other user enters or leaves the channel you are currently in, register event listener for `entered` or `leaved` event.
+
+#### Example
+
+```javascript
+mooyaho.addEventListener('entered', (e) => {
+  if (e.isSelf) return // e.isSelf is true when it is a entered event of current user
+  // You can add the UI of the user who has entered the channel after you
+  // e.user is the information you have integrated from the server
+  const sessionDiv = createSessionDiv(e.sessionId, e.user.username)
+  othersDiv.appendChild(sessionDiv)
+})
+
+mooyaho.addEventListener('left', (e) => {
+  // You can remove the UI of the user who has left the channel
+  const video = document.getElementById(e.sessionId)
+  if (video) {
+    video.parentNode.removeChild(video)
+  }
+})
+```
+
+### Dealing with other user's stream
+
+To use the video or audio that other user has sent, you have handle `remoteStreamChanged` event. In this event, you will receive the sessionId of the user. You can select the stream of the speicific user by using `getRemoteStreamById(id: string)`.
+
+#### Example
+
+```javascript
+mooyaho.addEventListener('remoteStreamChanged', (e) => {
+  const sessionDiv = document.getElementById(e.sessionId)
+  if (!sessionDiv) return
+
+  const stream = mooyaho.getRemoteStreamById(e.sessionId)
+
+  const video = sessionDiv.querySelector('video')
+  video.srcObject = stream
+})
+```
+
+### Leaving Channel
+
+To leave the channel, call `leave` API.
+
+```javascript
+mooyaho.leave()
+```
