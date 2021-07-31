@@ -21,10 +21,14 @@ module.exports = {
       },
       items: [
         {
-          type: 'doc',
-          docId: 'getting-started',
+          to: '/docs/getting-started',
           position: 'left',
           label: 'Getting Started',
+        },
+        {
+          to: '/docs/faq',
+          position: 'left',
+          label: 'FAQ',
         },
         // { to: '/blog', label: 'Blog', position: 'left' },
         {

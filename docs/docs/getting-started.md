@@ -19,7 +19,7 @@ sidebar_position: 1
 
 ### Setup Server
 
-This framework is built with JavaScript only. You just need Node.js (>v14) to run the server.
+This framework is built with JavaScript only. You just need Node.js (>v14) to run the server. Additionally, you need Redis to run the server. Mooyaho server connects to redis server at localhost by default. You can change the Redis server address from `.env` file of root directory of the mooyaho server server. To check detailed information about the environment variables, read [Server Settings](./server-settings.md).
 
 Following command will create Mooyaho Server in my-server directory.
 
@@ -27,7 +27,7 @@ Following command will create Mooyaho Server in my-server directory.
 npx create-mooyaho-server my-server
 ```
 
-Default port of the server is 8080. If you want to change the server config, open `.env` file of root directory of your server. To check detailed information about the environment variables, read [Server Settings](./server-settings.md).
+Default port of the server is 8080. If you want to change the server config, open `.env` file
 
 Then run following command to run the server
 
