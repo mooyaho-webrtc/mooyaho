@@ -25,11 +25,6 @@ module.exports = {
           position: 'left',
           label: 'Getting Started',
         },
-        {
-          to: '/docs/faq',
-          position: 'left',
-          label: 'FAQ',
-        },
         // { to: '/blog', label: 'Blog', position: 'left' },
         {
           href: 'https://github.com/facebook/docusaurus',
