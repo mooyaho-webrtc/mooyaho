@@ -116,6 +116,7 @@ const channelService = {
     const session = channelSessions.map(cs => ({
       id: cs.sessionId,
       user: JSON.parse(cs.session.user.json),
+      state: JSON.parse(cs.session.state),
     }))
     return session
   },

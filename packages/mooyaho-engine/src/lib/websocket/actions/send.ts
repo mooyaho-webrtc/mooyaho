@@ -105,6 +105,13 @@ export type ChannelClosedAction = {
   type: 'channelClosed'
 }
 
+export type UpdatedMediaStateAction = {
+  type: 'updatedMediaState'
+  sessionId: string
+  key: 'muted' | 'videoOff'
+  value: boolean
+}
+
 export type SendAction =
   | ConnectedAction
   | ReuseIdSuccessAction
@@ -120,6 +127,7 @@ export type SendAction =
   | IntegratedUserAction
   | EnterSuccessAction
   | ChannelClosedAction
+  | UpdatedMediaStateAction
 
 const actionCreators = {
   connected: (id: string, token: string): ConnectedAction => ({
@@ -214,6 +222,16 @@ const actionCreators = {
   }),
   channelClosed: (): ChannelClosedAction => ({
     type: 'channelClosed',
+  }),
+  updatedState: (
+    sessionId: string,
+    key: 'muted' | 'videoOff',
+    value: boolean
+  ): UpdatedMediaStateAction => ({
+    type: 'updatedMediaState',
+    sessionId,
+    key,
+    value,
   }),
 }
 

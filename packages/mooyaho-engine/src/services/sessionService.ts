@@ -38,6 +38,10 @@ const sessionService = {
         data: {
           id: sessionId,
           userId: user.id,
+          state: JSON.stringify({
+            muted: false,
+            videoOff: false,
+          }),
         },
       })
     }
@@ -60,6 +64,10 @@ const sessionService = {
       data: {
         id: sessionId,
         userId: prevSession.userId,
+        state: JSON.stringify({
+          muted: false,
+          videoOff: false,
+        }),
       },
     })
     return JSON.parse(prevSession.user.json)
@@ -77,6 +85,24 @@ const sessionService = {
     }
     const parsed: SessionUser = JSON.parse(session.user.json)
     return parsed
+  },
+
+  async updateState(sessionId: string, key: string, value: any) {
+    const session = await prisma.session.findUnique({
+      where: { id: sessionId },
+    })
+    if (!session) return
+    const prevState = JSON.parse(session.state)
+    const nextState = JSON.stringify({
+      ...prevState,
+      [key]: value,
+    })
+    await prisma.session.update({
+      where: { id: sessionId },
+      data: {
+        state: nextState,
+      },
+    })
   },
 }
 

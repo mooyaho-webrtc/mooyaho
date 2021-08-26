@@ -6,6 +6,7 @@ import {
   CandidateAction,
   Message,
   ReceiveAction,
+  UpdateMediaStateAction,
 } from './actions/receive'
 import actionCreators from './actions/send'
 import { createHmac } from 'crypto'
@@ -102,6 +103,10 @@ class Session {
       }
       case 'integrateUser': {
         this.handleIntegrateUser(action.user)
+        break
+      }
+      case 'updateMediaState': {
+        this.handleUpdateMediaState(action)
         break
       }
       // case 'SFUCandidate': {
@@ -282,6 +287,15 @@ class Session {
     }
     await sessionService.integrate(this.id, JSON.stringify(userWithSessionId))
     this.sendJSON(actionCreators.integrated(userWithSessionId))
+  }
+
+  async handleUpdateMediaState(action: UpdateMediaStateAction) {
+    if (!this.currentChannel) return
+    sessionService.updateState(this.id, action.key, action.value)
+    channelHelper.broadcast(
+      this.currentChannel,
+      actionCreators.updatedState(this.id, action.key, action.value)
+    )
   }
 
   public sendSubscriptionMessage(key: string, message: any) {

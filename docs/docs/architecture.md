@@ -4,7 +4,9 @@ sidebar_position: 2
 
 # Architecture
 
-This document will describe the workflow of Mooyaho. Reading this document is not required to use Mooyaho, it just helps you with understanding how the whole system works.
+This document will describe the workflow of Mooyaho. Reading this document helps you to understand how the whole system works. It is recommended to read before you start development.
+
+Reading this document is not required to use Mooyaho, it just helps you with understanding how the whole system works.
 
 If you are using Mooyaho, you have to prepare following servers:
 

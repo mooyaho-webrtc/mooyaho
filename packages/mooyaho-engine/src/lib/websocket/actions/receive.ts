@@ -77,10 +77,6 @@ export type Message =
       text: string
     }
   | {
-      type: 'mute'
-      value: boolean
-    }
-  | {
       type: 'custom'
       data: any
     }
@@ -97,6 +93,12 @@ type IntegrateUserAction = {
   }
 }
 
+export type UpdateMediaStateAction = {
+  type: 'updateMediaState'
+  key: 'videoOff' | 'muted'
+  value: boolean
+}
+
 const actionTypes = [
   'getId',
   'reuseId',
@@ -110,6 +112,7 @@ const actionTypes = [
   'answer',
   'candidate',
   'integrateUser',
+  'updateMediaState',
 ]
 
 export type ReceiveAction =
@@ -125,6 +128,7 @@ export type ReceiveAction =
   | AnswerAction
   | CandidateAction
   | IntegrateUserAction
+  | UpdateMediaStateAction
 
 export function isReceiveAction(object: any): object is ReceiveAction {
   if (!object?.type) return false

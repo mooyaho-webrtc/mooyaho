@@ -11,6 +11,10 @@ import protect from '../../lib/plugins/protect'
 
 const channels: FastifyPluginAsync = async fastify => {
   fastify.register(protect)
+
+  // @todo: list all channels
+  // add option to list empty ones
+
   fastify.post<{ Body: CreateChannelBody }>(
     '/',
     {

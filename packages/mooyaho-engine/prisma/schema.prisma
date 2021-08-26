@@ -21,6 +21,7 @@ model Channel {
 model Session {
   id     String @id
   userId String
+  state  String
 
 
   user            User             @relation(fields: [userId], references: [id])

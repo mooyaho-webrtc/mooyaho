@@ -7,13 +7,23 @@ export interface EventMap {
   sfuPeerConnected: { peer: RTCPeerConnection }
   peerConnected: { sessionId: string; peer: RTCPeerConnection }
   reconnected: { sessionId: string }
+  updatedMediaState: {
+    sessionId: string
+    key: 'muted' | 'videoOff'
+    value: boolean
+    isSelf: boolean
+  }
 }
 
 export type EventType = keyof EventMap
 
 export interface LocalEventMap {
   listSessions: {
-    sessions: { id: string; user: any }[]
+    sessions: {
+      id: string
+      user: any
+      state: { muted: false; videoOff: false }
+    }[]
   }
 }
 export type LocalEventType = keyof LocalEventMap

@@ -3,6 +3,7 @@ import { EventMap, EventType, LocalEventMap, LocalEventType } from './Events'
 import {
   CandidatedAction,
   SendAction as ServerSentAction,
+  UpdatedMediaStateAction,
 } from 'mooyaho-engine/src/lib/websocket/actions/send'
 import { ReceiveAction } from '../../mooyaho-engine/src/lib/websocket/actions/receive'
 import { waitUntil } from './utils/waitUntil'
@@ -26,7 +27,10 @@ class Mooyaho {
 
   private events = new EventEmitter()
   private localEvents = new EventEmitter<LocalEventMap>()
-  sessions: Map<string, { id: string; user: any }> = new Map()
+  sessions: Map<
+    string,
+    { id: string; user: any; state: { muted: boolean; videoOff: boolean } }
+  > = new Map()
 
   private cancelConnect: (() => void) | null = null
 
@@ -87,6 +91,9 @@ class Mooyaho {
       case 'reuseIdSuccess':
         this.handleReuseIdSuccess()
         break
+      case 'updatedMediaState':
+        this.handleUpdatedMediaState(action)
+        break
       default:
         console.log('Unhandled action: ', action)
         break
@@ -111,7 +118,9 @@ class Mooyaho {
 
     // store sessions to sessions map
     result.sessions.forEach(session => {
-      this.sessions.set(session.id, session)
+      this.sessions.set(session.id, {
+        ...session,
+      })
     })
 
     if (sfuEnabled) {
@@ -126,7 +135,11 @@ class Mooyaho {
     if (sessionId !== this.sessionId) {
       this.call(sessionId)
       // put user in sessions with session id as key
-      this.sessions.set(sessionId, { id: sessionId, user })
+      this.sessions.set(sessionId, {
+        id: sessionId,
+        user,
+        state: { muted: false, videoOff: false },
+      })
     }
 
     this.emit('entered', {
@@ -221,6 +234,15 @@ class Mooyaho {
     if (this.channelId !== '') {
       this.enter(this.channelId)
     }
+  }
+
+  private handleUpdatedMediaState(action: UpdatedMediaStateAction) {
+    this.emit('updatedMediaState', {
+      key: action.key,
+      sessionId: action.sessionId,
+      value: action.value,
+      isSelf: action.sessionId === this.sessionId,
+    })
   }
 
   private send(action: ReceiveAction) {
@@ -545,6 +567,14 @@ class Mooyaho {
       return
     }
     return this.call(sessionId)
+  }
+
+  updateMediaState(key: 'muted' | 'videoOff', value: boolean) {
+    this.send({
+      type: 'updateMediaState',
+      key,
+      value,
+    })
   }
 
   dispose() {
