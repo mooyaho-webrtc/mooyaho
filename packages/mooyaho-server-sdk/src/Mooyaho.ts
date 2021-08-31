@@ -30,6 +30,16 @@ class Mooyaho {
     const response = await apiClient.post<ChannelSession>(`/sessions/${sessionId}`, user)
     return response.data
   }
+
+  async listAllChannels() {
+    const response = await apiClient.get<(Channel & { sessionCount: number })[]>('/channels')
+    return response.data
+  }
+
+  async bulkDeleteChannels(channelIds: string[]) {
+    await apiClient.post(`/channels/bulk-delete`, channelIds)
+    return true
+  }
 }
 
 export default Mooyaho

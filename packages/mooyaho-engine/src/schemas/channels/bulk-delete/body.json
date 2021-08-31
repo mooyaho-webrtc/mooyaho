@@ -1,0 +1,13 @@
+{
+  "title": "Bulk Delete Channel Body",
+  "type": "object",
+  "properties": {
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": ["ids"]
+}

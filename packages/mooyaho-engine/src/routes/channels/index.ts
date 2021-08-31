@@ -6,13 +6,47 @@ import RemoveChannelParamsSchema from '../../schemas/channels/remove/params.json
 import { RemoveChannelParams } from '../../schema-types/channels/remove/params'
 import GetChannelParamsSchema from '../../schemas/channels/get/params.json'
 import { GetChannelParams } from '../../schema-types/channels/get/params'
-
+import BulkDeleteBodySchema from '../../schemas/channels/get/params.json'
+import { BulkDeleteChannelBody } from '../../schema-types/channels/bulk-delete/body'
 import protect from '../../lib/plugins/protect'
 
 const channels: FastifyPluginAsync = async fastify => {
   fastify.register(protect)
 
   // @todo: list all channels
+  fastify.get(
+    '/',
+    {
+      schema: {
+        description: 'List all channels',
+        response: {
+          200: {
+            description: 'Successful response',
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                sfuServerId: { type: 'number', nullable: true },
+                sessionCount: { type: 'number' },
+              },
+            },
+            example: [
+              {
+                id: '94ea89b2-c2e1-4e99-817c-47c62dfa7297',
+                sfuServerId: 1,
+                sessionCount: 0,
+              },
+            ],
+          },
+        },
+      },
+    },
+    async () => {
+      const channels = await channelService.listAll()
+      return channels
+    }
+  )
   // add option to list empty ones
 
   fastify.post<{ Body: CreateChannelBody }>(
@@ -56,6 +90,28 @@ const channels: FastifyPluginAsync = async fastify => {
     },
     async (request, reply) => {
       return channelService.getChannelInfo(request.params.id)
+    }
+  )
+
+  fastify.post<{ Body: BulkDeleteChannelBody }>(
+    '/bulk-delete',
+    {
+      schema: {
+        body: BulkDeleteBodySchema,
+        response: {
+          204: {
+            description: 'Successful response',
+            type: 'null',
+            example: null,
+          },
+        },
+      },
+    },
+    async request => {
+      const ids = request.body.ids
+      for (let i = 0; i < ids.length; i++) {
+        await channelService.remove(ids[i])
+      }
     }
   )
 

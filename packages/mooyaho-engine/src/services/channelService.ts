@@ -120,6 +120,24 @@ const channelService = {
     }))
     return session
   },
+
+  async listAll() {
+    /* @todo: Use aggregate group
+       https://www.prisma.io/docs/concepts/components/prisma-client/aggregation-grouping-summarizing#order-by-aggregate-group-preview
+    */
+
+    const channels = await prisma.channel.findMany({
+      include: {
+        ChannelSessions: true,
+      },
+    })
+
+    return channels.map(({ id, sfuServerId, ChannelSessions }) => ({
+      id,
+      sfuServerId,
+      sessionCount: ChannelSessions.length,
+    }))
+  },
 }
 
 export default channelService
