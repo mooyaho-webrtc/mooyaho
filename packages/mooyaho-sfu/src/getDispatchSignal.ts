@@ -1,4 +1,4 @@
-import { Signal } from 'mooyaho-grpc'
+import { Signal } from '@mooyaho/grpc'
 
 let dispatchSignal: Callback | null = null
 export function registerDispatchSignal(callback: Callback) {

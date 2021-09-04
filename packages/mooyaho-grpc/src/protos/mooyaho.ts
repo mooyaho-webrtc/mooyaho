@@ -11,7 +11,6 @@ export interface ProtoGrpcType {
   mooyaho: {
     Empty: MessageTypeDefinition
     LeaveParams: MessageTypeDefinition
-    ListenSignalRequest: MessageTypeDefinition
     Mooyaho: SubtypeConstructor<typeof grpc.Client, _mooyaho_MooyahoClient> & { service: _mooyaho_MooyahoDefinition }
     Signal: MessageTypeDefinition
   }

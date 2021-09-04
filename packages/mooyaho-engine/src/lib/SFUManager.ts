@@ -1,4 +1,4 @@
-import { Client } from '../../../mooyaho-grpc/dist'
+import { Client } from '@mooyaho/grpc'
 import sfuServerService from '../services/sfuServerService'
 import prisma from './prisma'
 import actionCreators from './websocket/actions/send'

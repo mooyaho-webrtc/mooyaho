@@ -1,5 +1,5 @@
 {
-  "name": "mooyaho-grpc",
+  "name": "@mooyaho/grpc",
   "version": "1.0.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,5 +15,9 @@
   "scripts": {
     "build:protos:types": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --grpcLib=@grpc/grpc-js --outDir=src/protos/ protos/*.proto",
     "build": "tsc"
-  }
+  },
+  "files": [
+    "/dist",
+    "/protos"
+  ]
 }
