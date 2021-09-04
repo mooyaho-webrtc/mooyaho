@@ -1,6 +1,6 @@
 {
-  "name": "mooyaho-engine",
-  "version": "1.0.0",
+  "name": "@mooyaho/engine",
+  "version": "1.0.0-alpha.1",
   "description": "",
   "main": "app.ts",
   "directories": {
@@ -51,5 +51,14 @@
     "tap": "^14.11.0",
     "ts-node": "^10.1.0",
     "typescript": "^4.1.3"
-  }
+  },
+  "files": [
+    "/prisma/schema.prisma",
+    "/src",
+    "/test",
+    "/.gitignore",
+    "/.prettierrc",
+    "/mooyaho.config.json",
+    "/tsconfig.json"
+  ]
 }

@@ -1,0 +1,14 @@
+{
+  "name": "mooyaho-init",
+  "version": "1.0.1",
+  "main": "index.js",
+  "bin": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "download": "^8.0.0",
+    "ncp": "^2.0.0"
+  },
+  "scripts": {
+    "start": "node index.js"
+  }
+}

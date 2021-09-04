@@ -1,5 +1,5 @@
 {
-  "name": "mooyaho-client-sdk",
+  "name": "@mooyaho/client",
   "version": "1.0.0-alpha.1",
   "main": "dist/cjs/bundle.js",
   "module": "dist/es/bundle.js",
@@ -15,5 +15,8 @@
   },
   "dependencies": {
     "eventemitter3": "^4.0.7"
-  }
+  },
+  "files": [
+    "/dist"
+  ]
 }

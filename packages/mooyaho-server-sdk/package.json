@@ -1,6 +1,6 @@
 {
-  "name": "mooyaho-server-sdk",
-  "version": "1.0.0",
+  "name": "@mooyaho/server-sdk",
+  "version": "1.0.0-alpha.2",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "license": "MIT",
@@ -13,5 +13,8 @@
   },
   "scripts": {
     "build": "tsc"
-  }
+  },
+  "files": [
+    "/dist"
+  ]
 }
