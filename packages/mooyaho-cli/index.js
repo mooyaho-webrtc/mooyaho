@@ -6,10 +6,14 @@ const fs = require("fs");
 const tmpDir = os.tmpdir();
 const crypto = require("crypto");
 const { ncp } = require("ncp");
-const { exec } = require("child_process");
+const { exec, execSync } = require("child_process");
 
-function isUsingYarn() {
-  return (process.env.npm_config_user_agent || "").indexOf("yarn") === 0;
+async function isUsingYarn() {
+  return new Promise((resolve) => {
+    exec("yarn --version", (error) => {
+      resolve(!error);
+    });
+  });
 }
 
 const [, , command, option] = process.argv;
@@ -19,8 +23,11 @@ function generateHash() {
 }
 
 const RELEASE_URL =
-  "https://github.com/mooyaho-webrtc/mooyaho/archive/refs/tags/v.1.0.0-alpha.1.zip";
-const fileName = path.basename(RELEASE_URL).replace(/\.zip$/, "");
+  "https://github.com/mooyaho-webrtc/mooyaho/archive/refs/tags/v1.0.0-alpha.4.zip";
+const fileName = path
+  .basename(RELEASE_URL)
+  .replace(/\.zip$/, "")
+  .replace(/^v/, "");
 const cwd = process.cwd();
 
 async function downloadArchive() {
@@ -31,8 +38,8 @@ async function downloadArchive() {
   return projectDirectory;
 }
 
-function installDeps(cwd) {
-  const packager = isUsingYarn() ? "yarn" : "npm";
+async function installDeps(cwd) {
+  const packager = (await isUsingYarn()) ? "yarn" : "npm";
 
   return new Promise((resolve, reject) => {
     const child = exec(`${packager} install`, { cwd });
@@ -49,6 +56,7 @@ function installDeps(cwd) {
 }
 
 async function initializeEngine() {
+  const hasYarn = await isUsingYarn();
   const projectDirectory = await downloadArchive();
   const mooyahoEngineDirectory = path.join(
     projectDirectory,
@@ -91,8 +99,11 @@ API_KEY=${generateHash()}`;
   fs.writeFileSync(envFileDir, env, "utf8");
 
   await installDeps(targetDirectory);
+  execSync(`${hasYarn ? "yarn" : "npm run"} prisma migrate dev --name init`, {
+    cwd: targetDirectory,
+  });
 
-  console.log(`mooyaho-engine initialized at ${targetDirectory}`);
+  process.chdir(targetDirectory);
 }
 
 async function initializeSFU() {

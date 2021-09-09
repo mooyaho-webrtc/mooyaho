@@ -1,0 +1,217 @@
+---
+sidebar_position: 3
+---
+
+import Tabs from '@theme/Tabs'
+import TabItem from '@theme/TabItem'
+
+# Video Chat with Multiple Users
+
+## Introduction
+
+In this tutorial, we will create **Mooyaho Meet**, which is a video chat webapp similar to [Google Meet](https://meet.google.com/). In this app, multiple users can have conversations with each other.
+
+![](/img/tutorial/meet/preview.png)
+
+Since there are many UI to prepare, we will use [React](https://reactjs.org/) to build the app to make the development easier.
+
+Furthermore, we also have to implement a simple API server to manage channels and user sessions. We will use [Node.js](https://nodejs.org/) and [Express](https://expressjs.com/) to build the server.
+
+Source code of this tutorial is available on [GitHub](https://github.com/mooyaho-webrtc)
+
+
+
+## Create Mooyaho Meet Server
+
+### Initialize Project
+
+Let's first prepare a server to manage Mooyaho channels and sessions.
+
+Create a project directory and initialize a Node.js project. Then, install express to create a web server.
+
+```bash
+$ mkdir mooyaho-meet-server
+$ cd mooyaho-meet-server
+$ yarn init -y # or npm init -y
+$ yarn add express # or npm install express
+```
+
+### Enable ESM in Node.js 
+
+We have to enable [ESM](https://nodejs.org/docs/latest-v14.x/api/esm.html) module system in our project because one of our dependency of the sample project (lowdb) is only compatible with ESM. 
+
+> Mooyaho itself is compatible with both CommonJS and ESM. `lowdb` is only used in this sample project.
+
+Add `"type": "module"` to `package.json` file. 
+
+Now, ESM is enabled in our project. You can use `import` instead of `require` to import modules.
+
+After installation, create `main.js` file in your project directory, and enter the following code.
+
+```js
+import express from 'express'
+
+const app = express()
+
+app.get('/', (req, res) => {
+  res.send('Hello World')
+})
+
+app.listen(5000, () => {
+  console.log('Server is running on port 5000')
+})
+```
+
+Then, enter the following command to start the server.
+
+```bash
+node ./main.js
+```
+
+Check [http://localhost:5000/](http://localhost:5000/) from your browser to see your server is running.
+
+In this server project, we will create 3 API endpoints.
+
+**`main.js`**
+
+```js {5-13}
+const express = require('express')
+
+const app = express()
+
+app.get('/auth/integrate', (req, res) => {
+  // integrates user session information
+})
+app.post('/meet', (req, res) => {
+  // creates meet channel
+})
+app.get('/meet/:code', (req, res) => {
+  // retrieve meet channel information
+})
+
+app.listen(5000, () => {
+  console.log('Server is running on port 5000')
+})
+```
+
+### Initialize Mooyaho Engine
+
+In this section, we will initialize Mooyaho Engine, and integrate our server to it.
+
+To initialize mooyaho engine, enter following command from outside of current server project directory.
+
+```bash
+npx mooyaho-cli init engine
+```
+
+After initializing, run the Mooyaho Engine.
+
+```bash
+cd mooyaho-engine
+yarn start
+```
+
+### Connect to Mooyaho Engine from Server
+
+Now, we will create a Mooyaho client instance from our API server. By using this client instance, you can manage the channels and sessions via its methods. To do this, install `@mooyaho/server-sdk` from the server.
+
+<Tabs
+  defaultValue="yarn"
+  values={[
+    { label: 'Yarn', value: 'yarn' },
+    { label: 'npm', value: 'npm' },
+  ]}
+>
+<TabItem value="yarn">
+
+```bash
+yarn add @mooyaho/server-sdk
+```
+
+</TabItem>
+<TabItem value="npm">
+
+```bash
+npm install @mooyaho/server-sdk
+```
+
+</TabItem>
+</Tabs>
+
+Then, import the package and create the instance as following.
+
+```js {1,5-8}
+import Mooyaho from 'mooyaho';
+const express = require('express')
+
+const app = express()
+const mooyaho = new Mooyaho('
+  http://localhost:8080',
+  '******'
+)
+
+app.get('/auth/integrate', (req, res) => {
+  // integrates user session information
+})
+app.post('/meet', (req, res) => {
+  // creates meet channel
+})
+app.get('/meet/:code', (req, res) => {
+  // retrieve meet channel information
+})
+
+app.listen(5000, () => {
+  console.log('Server is running on port 5000')
+})
+```
+
+The second parameter of `Mooyaho` class is the API Server secret key. To retrieve the secret key, check `API_KEY` field of the `.env` file from the Mooyaho Engine directory. This key is generated automatically when you have initialized your Mooyaho Engine.
+
+
+### Setup database
+
+We need a database to store channel information. For the database, we will use lowdb which is lightweight embedded database. In real project, you should use a database like MongoDB or MariaDB since this database is only suitable for small projects.
+
+Install lowdb to your project.
+
+<Tabs
+  defaultValue="yarn"
+  values={[
+    { label: 'Yarn', value: 'yarn' },
+    { label: 'npm', value: 'npm' },
+  ]}
+>
+<TabItem value="yarn">
+
+```bash
+yarn add lowdb
+```
+
+</TabItem>
+<TabItem value="npm">
+
+```bash
+npm install lowdb
+```
+
+</TabItem>
+</Tabs>
+
+Next, create db.js file in your server project directory and write the code as below.
+
+```js
+import { Low, JSONFile } from 'lowdb'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url)) // way to retrieve __dirname in ESM
+const file = path.resolve(__dirname, './db.json')
+const adapater = new JSONFile(file)
+const db = new Low(adapater)
+
+export default db
+```
+
+We've separated the database setup code to another file to make the server code simple possible.
+
+Now, we are ready to implement the Server API.
