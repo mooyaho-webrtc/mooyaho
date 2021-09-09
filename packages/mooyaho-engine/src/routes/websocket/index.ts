@@ -45,6 +45,7 @@ const sessionIds = new Set()
 
 function syncSessionIds() {
   const sessionIdsArray = [...sessionIds]
+
   return new Promise<void>(resolve =>
     fs.writeFile(sessionIdsPath, sessionIdsArray.join(','), 'utf-8', err => {
       resolve()
@@ -74,8 +75,12 @@ async function cleanSession(id: string) {
 
 export function cleanSessions() {
   // load sessionIds from file
-  const sessionIds = fs.readFileSync(sessionIdsPath, 'utf-8').split(',')
-  return Promise.all(sessionIds.map(cleanSession))
+  try {
+    const sessionIds = fs.readFileSync(sessionIdsPath, 'utf-8').split(',')
+    return Promise.all(sessionIds.map(cleanSession))
+  } catch (e) {
+    return Promise.resolve([])
+  }
 }
 
 export function disconnectAllSessions() {
